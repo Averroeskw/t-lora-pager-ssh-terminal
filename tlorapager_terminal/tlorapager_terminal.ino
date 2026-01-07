@@ -694,9 +694,10 @@ void processKeyboard() {
         if (key == '\r') {
             // Send newline
             sshSendKey('\n');
-        } else if (key == '\b' || key == 127) {
-            // Send backspace
-            sshSendKey('\b');
+        } else if (key == '\b' || key == 127 || key == 8) {
+            // Send DEL (0x7F) - works for most shells
+            sshSendKey(0x7F);
+            Serial.println("Backspace sent as DEL");
         } else {
             // Send the key directly
             sshSendKey(key);
@@ -705,7 +706,7 @@ void processKeyboard() {
         // Not connected - show local echo for feedback
         if (key == '\n' || key == '\r') {
             terminalPrint("\n> ");
-        } else if (key == '\b' || key == 127) {
+        } else if (key == '\b' || key == 127 || key == 8) {
             if (termBufferPos > 0) {
                 termBufferPos--;
                 termBuffer[termBufferPos] = '\0';
@@ -714,6 +715,29 @@ void processKeyboard() {
         } else if (key >= 32 && key < 127) {
             terminalPrintChar(key);
         }
+    }
+}
+
+// Check for long-press backspace from keyboard
+void checkLongPressBackspace() {
+    static unsigned long lastBackspaceTime = 0;
+    static bool backspaceHeld = false;
+
+    // Check if backspace is being held (key code 8 or 127)
+    char key = 0;
+    if (instance.getKeyChar(&key) > 0 && (key == '\b' || key == 127 || key == 8)) {
+        if (!backspaceHeld) {
+            backspaceHeld = true;
+            lastBackspaceTime = millis();
+        } else if (millis() - lastBackspaceTime > 100) {
+            // Repeat backspace every 100ms when held
+            if (sshConnected && sshChannel) {
+                sshSendKey(0x7F);
+            }
+            lastBackspaceTime = millis();
+        }
+    } else {
+        backspaceHeld = false;
     }
 }
 
