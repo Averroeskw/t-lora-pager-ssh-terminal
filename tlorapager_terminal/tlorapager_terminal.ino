@@ -237,8 +237,17 @@ void processRotary() {
 
         if (settingsUIIsVisible()) {
             settingsUIHandleRotary(direction);
+        } else if (terminalTA) {
+            // Scroll terminal up/down
+            lv_coord_t scrollAmount = 40;  // Pixels per detent
+            if (direction > 0) {
+                // Scroll down (toward newer content)
+                lv_obj_scroll_by(terminalTA, 0, -scrollAmount, LV_ANIM_ON);
+            } else {
+                // Scroll up (toward older content)
+                lv_obj_scroll_by(terminalTA, 0, scrollAmount, LV_ANIM_ON);
+            }
         }
-        // Could add terminal scrolling here when not in settings
     }
 }
 
