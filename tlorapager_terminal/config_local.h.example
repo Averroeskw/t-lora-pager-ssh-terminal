@@ -1,0 +1,21 @@
+/*
+ * Local Configuration Example
+ * ===========================
+ * Copy this file to config_local.h and edit with your settings.
+ * config_local.h is ignored by git.
+ */
+
+#ifndef CONFIG_LOCAL_H
+#define CONFIG_LOCAL_H
+
+// Wi-Fi credentials
+#define WIFI_SSID_LOCAL "your-ssid"
+#define WIFI_PASSWORD_LOCAL "your-password"
+
+// Gateway settings
+#define GATEWAY_HOST_LOCAL "jetson.local"
+#define GATEWAY_PORT_LOCAL 7681
+#define GATEWAY_PATH_LOCAL "/ws"
+#define USE_SSL_LOCAL false
+
+#endif // CONFIG_LOCAL_H

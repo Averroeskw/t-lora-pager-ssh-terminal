@@ -1,0 +1,17 @@
+# PlatformIO build and library dependencies
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# IDE settings
+.vscode/
+.idea/
+
+# MacOS
+.DS_Store
+
+# Compiled files
+*.o
+*.elf
+*.bin
+*.hex
