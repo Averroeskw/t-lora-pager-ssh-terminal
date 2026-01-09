@@ -1,5 +1,6 @@
 /**
  * Settings UI Implementation
+ * Full LVGL menu system for T-LoRa Pager Terminal
  */
 
 #include "settings_ui.h"
@@ -11,34 +12,34 @@
 static MenuState_t currentMenu = MENU_HIDDEN;
 static int selectedIndex = 0;
 static int scrollOffset = 0;
-static int maxVisibleItems = 5;  // Items visible without scrolling
+static int maxVisibleItems = 5;
 
-// Haptic feedback functions (use DRV2605 motor driver)
+// Haptic feedback functions
 void playHapticClick() {
     if (!settings.hapticEnabled) return;
-    instance.drv.setWaveform(0, 1);   // Strong click
-    instance.drv.setWaveform(1, 0);   // End
+    instance.drv.setWaveform(0, 1);
+    instance.drv.setWaveform(1, 0);
     instance.drv.run();
 }
 
 void playHapticTick() {
     if (!settings.hapticEnabled) return;
-    instance.drv.setWaveform(0, 10);  // Short tick
+    instance.drv.setWaveform(0, 10);
     instance.drv.setWaveform(1, 0);
     instance.drv.run();
 }
 
 void playHapticBump() {
     if (!settings.hapticEnabled) return;
-    instance.drv.setWaveform(0, 47);  // Bump
+    instance.drv.setWaveform(0, 47);
     instance.drv.setWaveform(1, 0);
     instance.drv.run();
 }
 
 void playHapticDouble() {
     if (!settings.hapticEnabled) return;
-    instance.drv.setWaveform(0, 1);   // Click
-    instance.drv.setWaveform(1, 1);   // Click again
+    instance.drv.setWaveform(0, 1);
+    instance.drv.setWaveform(1, 1);
     instance.drv.setWaveform(2, 0);
     instance.drv.run();
 }
@@ -48,9 +49,8 @@ static lv_obj_t *settingsScreen = NULL;
 static lv_obj_t *menuContainer = NULL;
 static lv_obj_t *titleLabel = NULL;
 static lv_obj_t *menuList = NULL;
-static lv_obj_t *statusLabel = NULL;
-static lv_obj_t *inputTA = NULL;      // Text input area
-static lv_obj_t *keyboard = NULL;     // On-screen keyboard
+static lv_obj_t *menuStatusLabel = NULL;  // Renamed to avoid conflict
+static lv_obj_t *inputTA = NULL;
 
 // WiFi scan results
 #define MAX_SCAN_RESULTS 20
@@ -61,8 +61,16 @@ static bool scanning = false;
 
 // Edit state
 static int editingNetworkIndex = -1;
-static int editingField = 0;  // 0=SSID, 1=Password
+static int editingField = 0;
 static char editBuffer[MAX_PASS_LEN];
+
+// Server editing state
+static bool editingRemoteServer = false;
+static int serverEditField = -1;  // -1=none, 0=host, 1=port, 2=path, 3=username, 4=password
+
+// WiFi input state
+static char wifiSSID[MAX_SSID_LEN] = "";
+static char wifiPass[MAX_PASS_LEN] = "";
 
 // Forward declarations
 static void createMainMenu();
@@ -72,27 +80,24 @@ static void createWiFiScanMenu();
 static void createWiFiAddMenu(const char* ssid);
 static void createWiFiEditMenu(int index);
 static void createServerMenu(bool isRemote);
+static void createServerEditMenu(int field);
 static void createSystemMenu();
 static void createAboutMenu();
-static void updateMenuHighlight();
 static void goBack();
 
-// External reference to terminal text area for theme application
+// External references from main file
+extern lv_obj_t *terminalScreen;
 extern lv_obj_t *terminalTA;
-extern lv_obj_t *statusBar;
-extern lv_obj_t *statusLabel;
 
 void settingsUIInit() {
-    // Settings screen will be created on demand
+    // Settings screen created on demand
 }
 
 void settingsUIShow() {
     if (settingsScreen == NULL) {
-        // Create settings screen
         settingsScreen = lv_obj_create(NULL);
         lv_obj_set_style_bg_color(settingsScreen, lv_color_hex(0x000000), 0);
     }
-
     currentMenu = MENU_MAIN;
     selectedIndex = 0;
     scrollOffset = 0;
@@ -102,10 +107,8 @@ void settingsUIShow() {
 
 void settingsUIHide() {
     currentMenu = MENU_HIDDEN;
-    // Return to terminal screen
-    extern lv_obj_t *terminalTA;
-    if (terminalTA) {
-        lv_scr_load(lv_obj_get_parent(terminalTA));
+    if (terminalScreen) {
+        lv_scr_load(terminalScreen);
     }
 }
 
@@ -124,7 +127,7 @@ static void clearMenu() {
     }
     menuList = NULL;
     titleLabel = NULL;
-    statusLabel = NULL;
+    menuStatusLabel = NULL;
     inputTA = NULL;
 }
 
@@ -147,7 +150,6 @@ static lv_obj_t* createMenuContainer(const char* title, int totalItems = 0) {
     lv_obj_set_style_border_width(titleBar, 0, 0);
     lv_obj_remove_flag(titleBar, LV_OBJ_FLAG_SCROLLABLE);
 
-    // Title with optional scroll indicator
     char titleBuf[64];
     if (totalItems > maxVisibleItems) {
         snprintf(titleBuf, sizeof(titleBuf), "%s [%d/%d]", title, selectedIndex + 1, totalItems);
@@ -160,32 +162,30 @@ static lv_obj_t* createMenuContainer(const char* title, int totalItems = 0) {
     lv_obj_set_style_text_font(titleLabel, &lv_font_montserrat_14, 0);
     lv_obj_align(titleLabel, LV_ALIGN_LEFT_MID, 10, 0);
 
-    // Back hint
     lv_obj_t *backLabel = lv_label_create(titleBar);
     lv_label_set_text(backLabel, "hold=back");
     lv_obj_set_style_text_color(backLabel, lv_color_hex(0x555555), 0);
     lv_obj_set_style_text_font(backLabel, &lv_font_montserrat_10, 0);
     lv_obj_align(backLabel, LV_ALIGN_RIGHT_MID, -10, 0);
 
-    // Status bar at bottom
-    lv_obj_t *statusBar = lv_obj_create(menuContainer);
-    lv_obj_set_size(statusBar, 480, 20);
-    lv_obj_set_pos(statusBar, 0, 202);
-    lv_obj_set_style_bg_color(statusBar, lv_color_hex(0x222222), 0);
-    lv_obj_set_style_border_width(statusBar, 0, 0);
-    lv_obj_remove_flag(statusBar, LV_OBJ_FLAG_SCROLLABLE);
+    // Status bar
+    lv_obj_t *statBar = lv_obj_create(menuContainer);
+    lv_obj_set_size(statBar, 480, 20);
+    lv_obj_set_pos(statBar, 0, 202);
+    lv_obj_set_style_bg_color(statBar, lv_color_hex(0x222222), 0);
+    lv_obj_set_style_border_width(statBar, 0, 0);
+    lv_obj_remove_flag(statBar, LV_OBJ_FLAG_SCROLLABLE);
 
-    statusLabel = lv_label_create(statusBar);
-    lv_label_set_text(statusLabel, "Rotate knob to scroll, click to select");
-    lv_obj_set_style_text_color(statusLabel, lv_color_hex(0x888888), 0);
-    lv_obj_set_style_text_font(statusLabel, &lv_font_montserrat_10, 0);
-    lv_obj_align(statusLabel, LV_ALIGN_LEFT_MID, 5, 0);
+    menuStatusLabel = lv_label_create(statBar);
+    lv_label_set_text(menuStatusLabel, "Rotate to scroll, click to select");
+    lv_obj_set_style_text_color(menuStatusLabel, lv_color_hex(0x888888), 0);
+    lv_obj_set_style_text_font(menuStatusLabel, &lv_font_montserrat_10, 0);
+    lv_obj_align(menuStatusLabel, LV_ALIGN_LEFT_MID, 5, 0);
 
     return menuContainer;
 }
 
 static lv_obj_t* addMenuItem(lv_obj_t *list, const char* text, const char* value, int index) {
-    // Skip items outside visible range
     if (index < scrollOffset || index >= scrollOffset + maxVisibleItems) {
         return NULL;
     }
@@ -241,8 +241,8 @@ static void createMainMenu() {
     snprintf(buf, sizeof(buf), "%d saved", settings.wifiNetworkCount);
     addMenuItem(menuList, "WiFi Networks", buf, 2);
 
-    addMenuItem(menuList, "Local Server", settings.localServer.enabled ? "ON" : "OFF", 3);
-    addMenuItem(menuList, "Remote Server", settings.remoteServer.enabled ? "ON" : "OFF", 4);
+    addMenuItem(menuList, "Local Server (SSH)", settings.localServer.enabled ? "ON" : "OFF", 3);
+    addMenuItem(menuList, "Remote Server (SSH)", settings.remoteServer.enabled ? "ON" : "OFF", 4);
     addMenuItem(menuList, "System", "", 5);
     addMenuItem(menuList, "About", "", 6);
 }
@@ -260,34 +260,35 @@ static void createDisplayMenu() {
 
     addMenuItem(menuList, "Theme", themeColors[settings.theme].name, 2);
 
-    if (statusLabel) {
-        lv_label_set_text(statusLabel, "Rotate to adjust");
+    if (menuStatusLabel) {
+        lv_label_set_text(menuStatusLabel, "Rotate to adjust, click Back to return");
     }
 }
 
 static void createWiFiListMenu() {
-    const int totalItems = settings.wifiNetworkCount + 3;  // Back + Scan + networks + Add
-    createMenuContainer("WIFI", totalItems);
+    const int totalItems = settings.wifiNetworkCount + 3;
+    createMenuContainer("WIFI NETWORKS", totalItems);
     createMenuList();
 
     addMenuItem(menuList, "[< Back]", "", 0);
-    addMenuItem(menuList, "[~] Scan Networks", "", 1);
+    addMenuItem(menuList, "[~] Scan for Networks", "", 1);
 
     for (int i = 0; i < settings.wifiNetworkCount && i < MAX_WIFI_NETWORKS; i++) {
-        char label[48];
-        char status[16];
+        char status[24];
         if (WiFi.status() == WL_CONNECTED && WiFi.SSID() == settings.wifiNetworks[i].ssid) {
-            strcpy(status, "* Connected");
+            strcpy(status, "Connected");
+        } else if (!settings.wifiNetworks[i].enabled) {
+            strcpy(status, "Disabled");
         } else {
-            strcpy(status, settings.wifiNetworks[i].enabled ? "" : "Disabled");
+            strcpy(status, "");
         }
         addMenuItem(menuList, settings.wifiNetworks[i].ssid, status, i + 2);
     }
 
-    addMenuItem(menuList, "[+] Add Network", "", settings.wifiNetworkCount + 2);
+    addMenuItem(menuList, "[+] Add Network Manually", "", settings.wifiNetworkCount + 2);
 
-    if (statusLabel) {
-        lv_label_set_text(statusLabel, "Click network to connect/delete");
+    if (menuStatusLabel) {
+        lv_label_set_text(menuStatusLabel, "Click network to toggle, long-hold to delete");
     }
 }
 
@@ -300,12 +301,12 @@ static void createWiFiScanMenu() {
 
     if (scanning) {
         lv_obj_t *label = lv_label_create(menuList);
-        lv_label_set_text(label, "Scanning...");
+        lv_label_set_text(label, "Scanning for networks...");
         lv_obj_set_style_text_color(label, lv_color_hex(0xFFFF00), 0);
     } else if (scanCount == 0) {
         lv_obj_t *label = lv_label_create(menuList);
-        lv_label_set_text(label, "No networks found");
-        lv_obj_set_style_text_color(label, lv_color_hex(0xFF0000), 0);
+        lv_label_set_text(label, "No networks found. Try again.");
+        lv_obj_set_style_text_color(label, lv_color_hex(0xFF6666), 0);
     } else {
         for (int i = 0; i < scanCount && i < MAX_SCAN_RESULTS; i++) {
             char rssiStr[16];
@@ -314,16 +315,12 @@ static void createWiFiScanMenu() {
         }
     }
 
-    if (statusLabel) {
-        lv_label_set_text(statusLabel, "Select to add");
+    if (menuStatusLabel) {
+        lv_label_set_text(menuStatusLabel, "Select network to add");
     }
 }
 
-// WiFi input state
-static char wifiSSID[MAX_SSID_LEN] = "";
-static char wifiPass[MAX_PASS_LEN] = "";
-
-static void createWiFiAddMenu(const char* ssid) {
+static void createTextInputScreen(const char* title, const char* prompt, const char* initial, bool isPassword) {
     clearMenu();
 
     menuContainer = lv_obj_create(settingsScreen);
@@ -334,7 +331,7 @@ static void createWiFiAddMenu(const char* ssid) {
     lv_obj_set_style_pad_all(menuContainer, 0, 0);
     lv_obj_remove_flag(menuContainer, LV_OBJ_FLAG_SCROLLABLE);
 
-    // Title
+    // Title bar
     lv_obj_t *titleBar = lv_obj_create(menuContainer);
     lv_obj_set_size(titleBar, 480, 24);
     lv_obj_set_pos(titleBar, 0, 0);
@@ -342,67 +339,41 @@ static void createWiFiAddMenu(const char* ssid) {
     lv_obj_set_style_border_width(titleBar, 0, 0);
     lv_obj_remove_flag(titleBar, LV_OBJ_FLAG_SCROLLABLE);
 
-    lv_obj_t *title = lv_label_create(titleBar);
-    lv_label_set_text(title, "ADD WIFI NETWORK");
-    lv_obj_set_style_text_color(title, lv_color_hex(0x00FF00), 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_14, 0);
-    lv_obj_align(title, LV_ALIGN_LEFT_MID, 10, 0);
+    lv_obj_t *titleLbl = lv_label_create(titleBar);
+    lv_label_set_text(titleLbl, title);
+    lv_obj_set_style_text_color(titleLbl, lv_color_hex(0x00FF00), 0);
+    lv_obj_set_style_text_font(titleLbl, &lv_font_montserrat_14, 0);
+    lv_obj_align(titleLbl, LV_ALIGN_LEFT_MID, 10, 0);
 
-    // If SSID provided (from scan), use it
-    if (ssid && strlen(ssid) > 0) {
-        strncpy(wifiSSID, ssid, MAX_SSID_LEN - 1);
-        editingField = 1;  // Go to password
-    } else {
-        wifiSSID[0] = '\0';
-        editingField = 0;  // Start with SSID
-    }
-    wifiPass[0] = '\0';
+    // Prompt
+    lv_obj_t *promptLbl = lv_label_create(menuContainer);
+    lv_label_set_text(promptLbl, prompt);
+    lv_obj_set_style_text_color(promptLbl, lv_color_hex(0xFFFF00), 0);
+    lv_obj_set_style_text_font(promptLbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_pos(promptLbl, 20, 50);
 
-    // SSID label and display
-    lv_obj_t *ssidLbl = lv_label_create(menuContainer);
-    lv_label_set_text(ssidLbl, "SSID:");
-    lv_obj_set_style_text_color(ssidLbl, lv_color_hex(0xAAAAAA), 0);
-    lv_obj_set_pos(ssidLbl, 20, 40);
-
-    lv_obj_t *ssidVal = lv_label_create(menuContainer);
-    lv_label_set_text(ssidVal, strlen(wifiSSID) > 0 ? wifiSSID : "(scanning or type below)");
-    lv_obj_set_style_text_color(ssidVal, lv_color_hex(0x00FF00), 0);
-    lv_obj_set_pos(ssidVal, 100, 40);
-
-    // Password label
-    lv_obj_t *passLbl = lv_label_create(menuContainer);
-    lv_label_set_text(passLbl, "Password:");
-    lv_obj_set_style_text_color(passLbl, lv_color_hex(0xAAAAAA), 0);
-    lv_obj_set_pos(passLbl, 20, 70);
-
-    // Current field indicator
-    lv_obj_t *fieldLbl = lv_label_create(menuContainer);
-    if (editingField == 0) {
-        lv_label_set_text(fieldLbl, "> Enter SSID:");
-    } else {
-        lv_label_set_text(fieldLbl, "> Enter Password:");
-    }
-    lv_obj_set_style_text_color(fieldLbl, lv_color_hex(0xFFFF00), 0);
-    lv_obj_set_pos(fieldLbl, 20, 100);
-
-    // Text input area
+    // Text input
     inputTA = lv_textarea_create(menuContainer);
-    lv_obj_set_size(inputTA, 350, 35);
-    lv_obj_set_pos(inputTA, 20, 125);
+    lv_obj_set_size(inputTA, 440, 40);
+    lv_obj_set_pos(inputTA, 20, 80);
     lv_textarea_set_one_line(inputTA, true);
-    lv_textarea_set_placeholder_text(inputTA, editingField == 0 ? "Type network name..." : "Type password...");
-    lv_textarea_set_password_mode(inputTA, editingField == 1);
+    lv_textarea_set_password_mode(inputTA, isPassword);
     lv_obj_set_style_bg_color(inputTA, lv_color_hex(0x222222), 0);
     lv_obj_set_style_text_color(inputTA, lv_color_hex(0x00FF00), 0);
+    lv_obj_set_style_text_font(inputTA, &lv_font_montserrat_14, 0);
     lv_obj_set_style_border_color(inputTA, lv_color_hex(0x00FF00), 0);
-    lv_obj_set_style_border_width(inputTA, 1, 0);
+    lv_obj_set_style_border_width(inputTA, 2, 0);
+
+    if (initial && strlen(initial) > 0) {
+        lv_textarea_set_text(inputTA, initial);
+    }
 
     // Instructions
     lv_obj_t *helpLbl = lv_label_create(menuContainer);
-    lv_label_set_text(helpLbl, "Type text, ENTER=next/save, long-press knob=cancel");
+    lv_label_set_text(helpLbl, "Type on keyboard, ENTER to save, long-press knob to cancel");
     lv_obj_set_style_text_color(helpLbl, lv_color_hex(0x666666), 0);
     lv_obj_set_style_text_font(helpLbl, &lv_font_montserrat_10, 0);
-    lv_obj_set_pos(helpLbl, 20, 170);
+    lv_obj_set_pos(helpLbl, 20, 140);
 
     // Status bar
     lv_obj_t *statBar = lv_obj_create(menuContainer);
@@ -412,71 +383,121 @@ static void createWiFiAddMenu(const char* ssid) {
     lv_obj_set_style_border_width(statBar, 0, 0);
     lv_obj_remove_flag(statBar, LV_OBJ_FLAG_SCROLLABLE);
 
-    statusLabel = lv_label_create(statBar);
-    lv_label_set_text(statusLabel, editingField == 0 ? "Step 1/2: Enter network name" : "Step 2/2: Enter password");
-    lv_obj_set_style_text_color(statusLabel, lv_color_hex(0x888888), 0);
-    lv_obj_set_style_text_font(statusLabel, &lv_font_montserrat_10, 0);
-    lv_obj_align(statusLabel, LV_ALIGN_LEFT_MID, 5, 0);
+    menuStatusLabel = lv_label_create(statBar);
+    lv_label_set_text(menuStatusLabel, isPassword ? "Password hidden for security" : "");
+    lv_obj_set_style_text_color(menuStatusLabel, lv_color_hex(0x888888), 0);
+    lv_obj_set_style_text_font(menuStatusLabel, &lv_font_montserrat_10, 0);
+    lv_obj_align(menuStatusLabel, LV_ALIGN_LEFT_MID, 5, 0);
 }
 
-// Server editing state
-static bool editingRemoteServer = false;
-static int serverEditField = -1;  // Which field being edited
+static void createWiFiAddMenu(const char* ssid) {
+    if (ssid && strlen(ssid) > 0) {
+        strncpy(wifiSSID, ssid, MAX_SSID_LEN - 1);
+        editingField = 1;  // Skip to password
+    } else {
+        wifiSSID[0] = '\0';
+        editingField = 0;  // Start with SSID
+    }
+    wifiPass[0] = '\0';
+
+    if (editingField == 0) {
+        createTextInputScreen("ADD WIFI", "Enter network name (SSID):", "", false);
+    } else {
+        char prompt[64];
+        snprintf(prompt, sizeof(prompt), "Enter password for '%s':", wifiSSID);
+        createTextInputScreen("ADD WIFI", prompt, "", true);
+    }
+}
 
 static void createServerMenu(bool isRemote) {
     editingRemoteServer = isRemote;
+    serverEditField = -1;
     ServerConfig_t *server = isRemote ? &settings.remoteServer : &settings.localServer;
-    const int totalItems = 8;
-    createMenuContainer(isRemote ? "REMOTE" : "LOCAL", totalItems);
+    const int totalItems = 10;
+    createMenuContainer(isRemote ? "REMOTE SSH SERVER" : "LOCAL SSH SERVER", totalItems);
     createMenuList();
 
     addMenuItem(menuList, "[< Back]", "", 0);
-    addMenuItem(menuList, "Enabled", server->enabled ? "ON" : "OFF", 1);
+    addMenuItem(menuList, "Enabled", server->enabled ? "YES" : "NO", 1);
     addMenuItem(menuList, "Host", server->host, 2);
 
     char portStr[8];
     snprintf(portStr, sizeof(portStr), "%d", server->port);
     addMenuItem(menuList, "Port", portStr, 3);
 
-    addMenuItem(menuList, "Path", server->path, 4);
-    addMenuItem(menuList, "SSL", server->useSSL ? "ON" : "OFF", 5);
-    addMenuItem(menuList, "[Test Connection]", "", 6);
-    addMenuItem(menuList, "[Connect Now]", "", 7);
+    addMenuItem(menuList, "Username", server->username, 4);
+    addMenuItem(menuList, "Password", "****", 5);
+    addMenuItem(menuList, "SSL/TLS", server->useSSL ? "YES" : "NO", 6);
+    addMenuItem(menuList, "", "", 7);  // Spacer
+    addMenuItem(menuList, "[Test Connection]", "", 8);
+    addMenuItem(menuList, "[Connect Now]", "", 9);
 
-    if (statusLabel) {
-        lv_label_set_text(statusLabel, "Click to toggle/edit");
+    if (menuStatusLabel) {
+        lv_label_set_text(menuStatusLabel, "Click to edit field");
     }
+}
+
+static void createServerEditMenu(int field) {
+    serverEditField = field;
+    ServerConfig_t *server = editingRemoteServer ? &settings.remoteServer : &settings.localServer;
+
+    const char* title = editingRemoteServer ? "EDIT REMOTE" : "EDIT LOCAL";
+    const char* prompt;
+    const char* initial;
+    bool isPassword = false;
+    char portBuf[8];
+
+    switch (field) {
+        case 0:  // Host
+            prompt = "Enter server hostname or IP:";
+            initial = server->host;
+            break;
+        case 1:  // Port
+            prompt = "Enter port number (e.g., 22):";
+            snprintf(portBuf, sizeof(portBuf), "%d", server->port);
+            initial = portBuf;
+            break;
+        case 2:  // Username
+            prompt = "Enter SSH username:";
+            initial = server->username;
+            break;
+        case 3:  // Password
+            prompt = "Enter SSH password:";
+            initial = server->password;
+            isPassword = true;
+            break;
+        default:
+            return;
+    }
+
+    createTextInputScreen(title, prompt, initial, isPassword);
 }
 
 static void createSystemMenu() {
     const int totalItems = 9;
-    createMenuContainer("SYSTEM", totalItems);
+    createMenuContainer("SYSTEM SETTINGS", totalItems);
     createMenuList();
 
     addMenuItem(menuList, "[< Back]", "", 0);
 
-    // Sound settings
     addMenuItem(menuList, "Sound", settings.soundEnabled ? "ON" : "OFF", 1);
     char volStr[8];
     snprintf(volStr, sizeof(volStr), "%d%%", settings.volume);
     addMenuItem(menuList, "Volume", volStr, 2);
 
-    // Haptic settings
-    addMenuItem(menuList, "Haptic", settings.hapticEnabled ? "ON" : "OFF", 3);
+    addMenuItem(menuList, "Haptic Feedback", settings.hapticEnabled ? "ON" : "OFF", 3);
     char hapStr[8];
     snprintf(hapStr, sizeof(hapStr), "%d%%", settings.hapticIntensity);
     addMenuItem(menuList, "Haptic Intensity", hapStr, 4);
 
-    // Connection settings
-    addMenuItem(menuList, "Auto-connect", settings.wifiAutoConnect ? "ON" : "OFF", 5);
-    addMenuItem(menuList, "Prefer Remote", settings.preferRemote ? "ON" : "OFF", 6);
+    addMenuItem(menuList, "Auto-connect WiFi", settings.wifiAutoConnect ? "ON" : "OFF", 5);
+    addMenuItem(menuList, "Prefer Remote Server", settings.preferRemote ? "ON" : "OFF", 6);
 
-    // Actions
-    addMenuItem(menuList, "[Reset Settings]", "", 7);
-    addMenuItem(menuList, "[Restart]", "", 8);
+    addMenuItem(menuList, "[Reset All Settings]", "", 7);
+    addMenuItem(menuList, "[Restart Device]", "", 8);
 
-    if (statusLabel) {
-        lv_label_set_text(statusLabel, "Rotate to adjust values");
+    if (menuStatusLabel) {
+        lv_label_set_text(menuStatusLabel, "Rotate to adjust values, click to toggle");
     }
 }
 
@@ -488,17 +509,19 @@ static void createAboutMenu() {
 
     lv_obj_t *info = lv_label_create(menuList);
     lv_label_set_text(info,
-        "\nT-LoRa Pager Terminal v1.0\n"
-        "WebSocket client for ttyd\n\n"
-        "ESP32-S3 @ 240MHz\n"
-        "Display: 480x222 ST7796\n"
-        "Radio: SX1262 LoRa"
+        "\nT-LoRa Pager SSH Terminal v1.0\n"
+        "Native SSH client using LibSSH\n\n"
+        "Hardware:\n"
+        "  ESP32-S3 @ 240MHz\n"
+        "  Display: 480x222 ST7796\n"
+        "  Radio: SX1262 LoRa\n"
+        "  Keyboard: TCA8418 QWERTY"
     );
     lv_obj_set_style_text_color(info, lv_color_hex(0x888888), 0);
     lv_obj_set_style_text_font(info, &lv_font_montserrat_12, 0);
 
-    if (statusLabel) {
-        lv_label_set_text(statusLabel, "");
+    if (menuStatusLabel) {
+        lv_label_set_text(menuStatusLabel, "");
     }
 }
 
@@ -537,35 +560,35 @@ static void handleMainMenuSelect() {
     playHapticClick();
     scrollOffset = 0;
     switch (selectedIndex) {
-        case 0:  // Close
+        case 0:
             settingsUIHide();
             break;
-        case 1:  // Display
+        case 1:
             currentMenu = MENU_DISPLAY;
             selectedIndex = 0;
             createDisplayMenu();
             break;
-        case 2:  // WiFi
+        case 2:
             currentMenu = MENU_WIFI_LIST;
             selectedIndex = 0;
             createWiFiListMenu();
             break;
-        case 3:  // Local Server
+        case 3:
             currentMenu = MENU_SERVER_LOCAL;
             selectedIndex = 0;
             createServerMenu(false);
             break;
-        case 4:  // Remote Server
+        case 4:
             currentMenu = MENU_SERVER_REMOTE;
             selectedIndex = 0;
             createServerMenu(true);
             break;
-        case 5:  // System
+        case 5:
             currentMenu = MENU_SYSTEM;
             selectedIndex = 0;
             createSystemMenu();
             break;
-        case 6:  // About
+        case 6:
             currentMenu = MENU_ABOUT;
             selectedIndex = 0;
             createAboutMenu();
@@ -578,12 +601,10 @@ static void handleDisplaySelect() {
     if (selectedIndex == 0) {
         goBack();
     }
-    // Other items adjusted with rotary
 }
 
 static void handleDisplayAdjust(int direction) {
     if (selectedIndex == 1) {
-        // Brightness
         int newBrightness = settings.brightness + (direction * 25);
         if (newBrightness < 10) newBrightness = 10;
         if (newBrightness > 255) newBrightness = 255;
@@ -592,7 +613,6 @@ static void handleDisplayAdjust(int direction) {
         settingsSave();
         createDisplayMenu();
     } else if (selectedIndex == 2) {
-        // Theme
         int newTheme = settings.theme + direction;
         if (newTheme < 0) newTheme = THEME_COUNT - 1;
         if (newTheme >= THEME_COUNT) newTheme = 0;
@@ -605,12 +625,12 @@ static void handleDisplayAdjust(int direction) {
 
 static void handleSystemAdjust(int direction) {
     switch (selectedIndex) {
-        case 1:  // Sound toggle
+        case 1:
             settings.soundEnabled = !settings.soundEnabled;
             settingsSave();
             createSystemMenu();
             break;
-        case 2:  // Volume
+        case 2:
             {
                 int newVol = settings.volume + (direction * 10);
                 if (newVol < 0) newVol = 0;
@@ -620,13 +640,13 @@ static void handleSystemAdjust(int direction) {
                 createSystemMenu();
             }
             break;
-        case 3:  // Haptic toggle
+        case 3:
             settings.hapticEnabled = !settings.hapticEnabled;
             settingsSave();
             playHapticClick();
             createSystemMenu();
             break;
-        case 4:  // Haptic Intensity
+        case 4:
             {
                 int newHap = settings.hapticIntensity + (direction * 10);
                 if (newHap < 0) newHap = 0;
@@ -637,12 +657,12 @@ static void handleSystemAdjust(int direction) {
                 createSystemMenu();
             }
             break;
-        case 5:  // Auto-connect toggle
+        case 5:
             settings.wifiAutoConnect = !settings.wifiAutoConnect;
             settingsSave();
             createSystemMenu();
             break;
-        case 6:  // Prefer Remote toggle
+        case 6:
             settings.preferRemote = !settings.preferRemote;
             settingsSave();
             createSystemMenu();
@@ -653,22 +673,22 @@ static void handleSystemAdjust(int direction) {
 static void handleSystemSelect() {
     playHapticClick();
     switch (selectedIndex) {
-        case 0:  // Back
+        case 0:
             goBack();
             break;
-        case 1:  // Toggle sound
-        case 3:  // Toggle haptic
-        case 5:  // Toggle auto-connect
-        case 6:  // Toggle prefer remote
-            handleSystemAdjust(1);  // Toggle
+        case 1:
+        case 3:
+        case 5:
+        case 6:
+            handleSystemAdjust(1);
             break;
-        case 7:  // Reset all settings
+        case 7:
             playHapticDouble();
             settingsReset();
             settingsSave();
             createSystemMenu();
             break;
-        case 8:  // Restart device
+        case 8:
             playHapticDouble();
             delay(200);
             ESP.restart();
@@ -680,8 +700,6 @@ void settingsUIStartWiFiScan() {
     scanning = true;
     scanCount = 0;
     createWiFiScanMenu();
-
-    // Start async scan
     WiFi.scanNetworks(true);
 }
 
@@ -699,41 +717,33 @@ void settingsUIUpdateWiFiList() {
     }
 }
 
-// Delete WiFi network by index
 static void deleteWiFiNetwork(int index) {
     if (index < 0 || index >= settings.wifiNetworkCount) return;
 
-    // Shift networks down
     for (int i = index; i < settings.wifiNetworkCount - 1; i++) {
         memcpy(&settings.wifiNetworks[i], &settings.wifiNetworks[i + 1], sizeof(WiFiNetwork_t));
     }
     settings.wifiNetworkCount--;
     settingsSave();
-    Serial.printf("Deleted network at index %d, count now %d\n", index, settings.wifiNetworkCount);
+    Serial.printf("Deleted WiFi network at index %d\n", index);
 }
 
 static void handleWiFiListSelect() {
     playHapticClick();
     if (selectedIndex == 0) {
-        // Back
         goBack();
     } else if (selectedIndex == 1) {
-        // Scan
         currentMenu = MENU_WIFI_SCAN;
         selectedIndex = 0;
         settingsUIStartWiFiScan();
     } else if (selectedIndex <= settings.wifiNetworkCount + 1) {
-        // Selected a saved network - show options (connect or delete)
         int netIndex = selectedIndex - 2;
         if (netIndex >= 0 && netIndex < settings.wifiNetworkCount) {
-            // For now, delete on select (could add submenu later)
-            // Toggle enabled/disabled instead of delete
             settings.wifiNetworks[netIndex].enabled = !settings.wifiNetworks[netIndex].enabled;
             settingsSave();
             createWiFiListMenu();
         }
     } else {
-        // Add manual
         currentMenu = MENU_WIFI_ADD;
         selectedIndex = 0;
         editingNetworkIndex = -1;
@@ -744,16 +754,13 @@ static void handleWiFiListSelect() {
 static void handleWiFiScanSelect() {
     playHapticClick();
     if (selectedIndex == 0) {
-        // Back
         goBack();
     } else if (selectedIndex <= scanCount) {
-        // Add selected network
         currentMenu = MENU_WIFI_ADD;
         createWiFiAddMenu(scanSSIDs[selectedIndex - 1].c_str());
     }
 }
 
-// Forward declaration for reconnect
 extern void connectToServer();
 
 static void handleServerSelect() {
@@ -761,23 +768,38 @@ static void handleServerSelect() {
     ServerConfig_t *server = editingRemoteServer ? &settings.remoteServer : &settings.localServer;
 
     switch (selectedIndex) {
-        case 0:  // Back
+        case 0:
             goBack();
             break;
-        case 1:  // Toggle enabled
+        case 1:
             server->enabled = !server->enabled;
             settingsSave();
             createServerMenu(editingRemoteServer);
             break;
-        case 5:  // Toggle SSL
+        case 2:  // Host
+            createServerEditMenu(0);
+            break;
+        case 3:  // Port
+            createServerEditMenu(1);
+            break;
+        case 4:  // Username
+            createServerEditMenu(2);
+            break;
+        case 5:  // Password
+            createServerEditMenu(3);
+            break;
+        case 6:  // SSL toggle
             server->useSSL = !server->useSSL;
             settingsSave();
             createServerMenu(editingRemoteServer);
             break;
-        case 6:  // Test connection
-            // TODO: Implement test
+        case 8:  // Test
+            // TODO: Implement connection test
+            if (menuStatusLabel) {
+                lv_label_set_text(menuStatusLabel, "Test not implemented yet");
+            }
             break;
-        case 7:  // Connect now
+        case 9:  // Connect now
             settingsUIHide();
             connectToServer();
             break;
@@ -785,85 +807,117 @@ static void handleServerSelect() {
 }
 
 static void saveWiFiNetwork(const char* ssid, const char* password) {
-    Serial.printf("saveWiFiNetwork: SSID='%s' Pass='%s'\n", ssid, password);
+    Serial.printf("Saving WiFi: SSID='%s'\n", ssid);
     if (settings.wifiNetworkCount < MAX_WIFI_NETWORKS) {
         int idx = settings.wifiNetworkCount;
         strncpy(settings.wifiNetworks[idx].ssid, ssid, MAX_SSID_LEN - 1);
         strncpy(settings.wifiNetworks[idx].password, password, MAX_PASS_LEN - 1);
         settings.wifiNetworks[idx].enabled = true;
         settings.wifiNetworkCount++;
-        Serial.printf("Network saved at index %d, count now %d\n", idx, settings.wifiNetworkCount);
         settingsSave();
-    } else {
-        Serial.println("ERROR: Max WiFi networks reached!");
+        Serial.printf("Network saved at index %d\n", idx);
     }
 }
 
-// Cancel WiFi input (called on long-press)
 void settingsUICancelInput() {
-    Serial.println("Long-press: Cancelling input");
+    Serial.println("Input cancelled");
     playHapticBump();
     wifiSSID[0] = '\0';
     wifiPass[0] = '\0';
     editingField = 0;
-    currentMenu = MENU_WIFI_LIST;
-    selectedIndex = 0;
-    scrollOffset = 0;
-    createWiFiListMenu();
+    serverEditField = -1;
+
+    if (currentMenu == MENU_WIFI_ADD || currentMenu == MENU_WIFI_EDIT) {
+        currentMenu = MENU_WIFI_LIST;
+        selectedIndex = 0;
+        scrollOffset = 0;
+        createWiFiListMenu();
+    } else if (serverEditField >= 0) {
+        serverEditField = -1;
+        createServerMenu(editingRemoteServer);
+    } else {
+        goBack();
+    }
 }
 
 void settingsUIHandleKey(char key) {
-    // Handle text input if in add/edit mode
+    // Handle text input for WiFi add/edit
     if (inputTA && (currentMenu == MENU_WIFI_ADD || currentMenu == MENU_WIFI_EDIT)) {
-        Serial.printf("WiFi Input: key=%d('%c') field=%d\n", key, key >= 32 ? key : '?', editingField);
         if (key >= 32 && key < 127) {
             lv_textarea_add_char(inputTA, key);
-        } else if (key == '\b' || key == 127) {
+        } else if (key == '\b' || key == 127 || key == 8) {
             lv_textarea_delete_char(inputTA);
         } else if (key == '\n' || key == '\r') {
-            // Get entered text
             const char* text = lv_textarea_get_text(inputTA);
-            Serial.printf("ENTER pressed, text='%s', field=%d\n", text, editingField);
 
             if (editingField == 0) {
-                // SSID entered, move to password
                 strncpy(wifiSSID, text, MAX_SSID_LEN - 1);
                 wifiSSID[MAX_SSID_LEN - 1] = '\0';
-                Serial.printf("SSID saved: '%s', moving to password\n", wifiSSID);
                 editingField = 1;
-                createWiFiAddMenu(wifiSSID);  // Refresh with SSID shown
+                createWiFiAddMenu(wifiSSID);
             } else {
-                // Password entered, save network
                 strncpy(wifiPass, text, MAX_PASS_LEN - 1);
                 wifiPass[MAX_PASS_LEN - 1] = '\0';
-                Serial.printf("Password saved: '%s'\n", wifiPass);
 
                 if (strlen(wifiSSID) > 0) {
                     saveWiFiNetwork(wifiSSID, wifiPass);
                     playHapticClick();
-                } else {
-                    Serial.println("ERROR: SSID is empty!");
                 }
 
-                // Go back to WiFi list
                 wifiSSID[0] = '\0';
                 wifiPass[0] = '\0';
+                editingField = 0;
                 currentMenu = MENU_WIFI_LIST;
                 selectedIndex = 0;
                 scrollOffset = 0;
                 createWiFiListMenu();
             }
         }
-        // Note: 'q' is NOT used for cancel in text input - user might need to type it!
-        // Use long-press rotary button to cancel (handled in main loop)
         return;
     }
 
-    // Navigation - 'q' to go back (not backspace - that's for text delete)
+    // Handle text input for server editing
+    if (inputTA && serverEditField >= 0) {
+        if (key >= 32 && key < 127) {
+            lv_textarea_add_char(inputTA, key);
+        } else if (key == '\b' || key == 127 || key == 8) {
+            lv_textarea_delete_char(inputTA);
+        } else if (key == '\n' || key == '\r') {
+            const char* text = lv_textarea_get_text(inputTA);
+            ServerConfig_t *server = editingRemoteServer ? &settings.remoteServer : &settings.localServer;
+
+            switch (serverEditField) {
+                case 0:  // Host
+                    strncpy(server->host, text, MAX_HOST_LEN - 1);
+                    break;
+                case 1:  // Port
+                    server->port = atoi(text);
+                    if (server->port == 0) server->port = 22;
+                    break;
+                case 2:  // Username
+                    strncpy(server->username, text, 31);
+                    break;
+                case 3:  // Password
+                    strncpy(server->password, text, 31);
+                    break;
+            }
+            settingsSave();
+            playHapticClick();
+
+            serverEditField = -1;
+            MenuState_t targetMenu = editingRemoteServer ? MENU_SERVER_REMOTE : MENU_SERVER_LOCAL;
+            currentMenu = targetMenu;
+            selectedIndex = 0;
+            scrollOffset = 0;
+            createServerMenu(editingRemoteServer);
+        }
+        return;
+    }
+
+    // Navigation
     if (key == 'q') {
         goBack();
     } else if (key == '\n' || key == '\r') {
-        // Select
         switch (currentMenu) {
             case MENU_MAIN:
                 handleMainMenuSelect();
@@ -895,22 +949,20 @@ void settingsUIHandleKey(char key) {
 
 void settingsUIHandleRotary(int direction) {
     if (direction == 0) {
-        // Click - same as Enter
         playHapticClick();
         settingsUIHandleKey('\n');
         return;
     }
 
-    // Haptic feedback for scroll
     playHapticTick();
 
-    // Adjust values in display menu (brightness=1, theme=2)
+    // Adjust values in display menu
     if (currentMenu == MENU_DISPLAY && selectedIndex > 0) {
         handleDisplayAdjust(direction);
         return;
     }
 
-    // Adjust values in system menu (volume=2, haptic intensity=4)
+    // Adjust values in system menu
     if (currentMenu == MENU_SYSTEM && (selectedIndex == 2 || selectedIndex == 4)) {
         handleSystemAdjust(direction);
         return;
@@ -924,7 +976,7 @@ void settingsUIHandleRotary(int direction) {
         case MENU_WIFI_LIST: maxItems = settings.wifiNetworkCount + 3; break;
         case MENU_WIFI_SCAN: maxItems = scanCount + 1; break;
         case MENU_SERVER_LOCAL:
-        case MENU_SERVER_REMOTE: maxItems = 8; break;
+        case MENU_SERVER_REMOTE: maxItems = 10; break;
         case MENU_SYSTEM: maxItems = 9; break;
         case MENU_ABOUT: maxItems = 1; break;
         default: return;
@@ -943,7 +995,7 @@ void settingsUIHandleRotary(int direction) {
         scrollOffset = selectedIndex - maxVisibleItems + 1;
     }
 
-    // Refresh current menu to update highlight
+    // Refresh current menu
     switch (currentMenu) {
         case MENU_MAIN: createMainMenu(); break;
         case MENU_DISPLAY: createDisplayMenu(); break;
@@ -957,9 +1009,6 @@ void settingsUIHandleRotary(int direction) {
 }
 
 void applyThemeToTerminal() {
-    extern lv_obj_t *terminalTA;
-    extern lv_obj_t *statusBar;
-
     const ThemeColors_t *theme = getCurrentTheme();
 
     if (terminalTA) {
@@ -967,11 +1016,11 @@ void applyThemeToTerminal() {
         lv_obj_set_style_text_color(terminalTA, lv_color_hex(theme->foreground), 0);
     }
 
-    // Note: statusBar and statusLabel are local to main file
-    // They need to be updated separately
+    if (terminalScreen) {
+        lv_obj_set_style_bg_color(terminalScreen, lv_color_hex(theme->background), 0);
+    }
 }
 
 static void createWiFiEditMenu(int index) {
-    // Similar to add menu but pre-filled with existing data
     createWiFiAddMenu(settings.wifiNetworks[index].ssid);
 }
