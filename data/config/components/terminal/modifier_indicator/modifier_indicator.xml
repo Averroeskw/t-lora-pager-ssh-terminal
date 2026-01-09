@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Modifier Key Indicator Component -->
+<component name="modifier_indicator">
+
+	<previews>
+		<preview width="16" height="14" />
+	</previews>
+
+	<api>
+		<prop name="key" type="string" default="?" help="Single character key label" />
+		<prop name="subject" type="string" default="mod_shift" help="Subject name for modifier state" />
+	</api>
+
+	<styles>
+		<style
+			name="base"
+			width="14"
+			height="14"
+			radius="#unit_xs"
+			text_font="terminal_mono_10"
+			text_align="center"
+			pad_all="0"
+		/>
+		<style name="active" bg_color="#accent_primary" bg_opa="#opa_subtle" text_color="#accent_primary" />
+		<style name="inactive" bg_opa="0" text_color="#fg_muted" />
+	</styles>
+
+	<view extends="lv_obj">
+		<style name="base" />
+		<style name="inactive" />
+		<bind_style name="active" subject="$subject" ref_value="true" />
+
+		<lv_label text="$key" align="center" />
+	</view>
+
+</component>

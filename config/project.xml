@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- T-LoRa Pager SSH Terminal - LVGL Project Configuration -->
+<project name="tlora_terminal">
+	<targets>
+		<target name="tlora_pager_k257">
+			<!-- T-LoRa Pager display: 320x240 -->
+			<display width="320" height="240" />
+		</target>
+		<target name="preview">
+			<!-- Desktop preview -->
+			<display width="320" height="240" />
+		</target>
+	</targets>
+</project>

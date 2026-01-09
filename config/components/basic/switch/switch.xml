@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Toggle Switch Component -->
+<component name="switch">
+
+	<previews>
+		<preview style_pad_all="4" />
+	</previews>
+
+	<styles>
+		<style name="knob" pad_all="-2" bg_color="#fg_primary" shadow_opa="0" />
+		<style name="track_off" bg_color="#fg_muted" bg_opa="#opa_low" />
+		<style name="track_on" bg_color="#accent_primary" bg_opa="#opa_full" />
+	</styles>
+
+	<view extends="lv_switch" width="40" height="24">
+		<style name="knob" selector="knob" />
+		<style name="track_off" selector="main" />
+		<style name="track_on" selector="indicator|checked" />
+	</view>
+
+</component>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Status Bar Component -->
+<component name="status_bar">
+
+	<previews>
+		<preview width="320" height="18" />
+	</previews>
+
+	<styles>
+		<style
+			name="bar_base"
+			width="100%"
+			height="#status_bar_height"
+			bg_color="#bg_status"
+			bg_opa="#opa_full"
+			pad_hor="#unit_sm"
+			pad_ver="#unit_xs"
+			layout="flex"
+			flex_flow="row"
+			flex_main_place="space-between"
+			flex_cross_place="center"
+		/>
+	</styles>
+
+	<view>
+		<remove_style_all />
+		<style name="bar_base" />
+
+		<!-- Left section: Connection indicators -->
+		<lv_obj layout="flex" flex_flow="row" gap="#unit_sm" height="100%" bg_opa="0">
+			<component name="wifi_indicator" />
+			<component name="websocket_indicator" />
+		</lv_obj>
+
+		<!-- Center section: Host -->
+		<lv_label text="$gateway_host" text_font="terminal_mono_10" />
+
+		<!-- Right section: Modifiers -->
+		<lv_obj layout="flex" flex_flow="row" gap="#unit_xs" height="100%" bg_opa="0">
+			<component name="modifier_indicator" key="S" subject="mod_shift" />
+			<component name="modifier_indicator" key="C" subject="mod_ctrl" />
+			<component name="modifier_indicator" key="A" subject="mod_alt" />
+			<component name="modifier_indicator" key="F" subject="mod_fn" />
+			<component name="modifier_indicator" key="Y" subject="mod_sym" />
+		</lv_obj>
+	</view>
+
+</component>

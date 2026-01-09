@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- WebSocket Connection Indicator Component -->
+<component name="websocket_indicator">
+
+	<previews>
+		<preview width="24" height="16" />
+	</previews>
+
+	<styles>
+		<style name="connected" text_color="#color_ok" />
+		<style name="disconnected" text_color="#color_err" />
+		<style name="ssl_badge" text_color="#accent_secondary" text_font="terminal_mono_10" />
+	</styles>
+
+	<view extends="lv_obj" width="content" height="100%" bg_opa="0" layout="flex" flex_flow="row" gap="#unit_xs">
+		<!-- Connection icon -->
+		<lv_image id="ws_icon">
+			<src>#icon_ws_disconnected</src>
+			<style name="disconnected" />
+			<bind_state subject="gateway_connected" ref_value="true">
+				<src>#icon_ws_connected</src>
+				<style name="connected" />
+			</bind_state>
+		</lv_image>
+
+		<!-- SSL indicator (only when SSL enabled and connected) -->
+		<lv_image id="ssl_icon">
+			<bind_state subject="gateway_ssl" ref_value="false" flag="hidden" />
+			<bind_state subject="gateway_connected" ref_value="false" flag="hidden" />
+			<src>#icon_ssl</src>
+			<style name="ssl_badge" />
+		</lv_image>
+	</view>
+
+</component>

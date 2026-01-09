@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- T-LoRa Pager SSH Terminal - Global Configuration -->
+<globals>
+
+	<!-- ═══════════════════════════════════════════════════════════════════════
+	     CONSTANTS - Spacing, sizing, colors
+	     ═══════════════════════════════════════════════════════════════════════ -->
+	<consts>
+		<!-- Spacing units -->
+		<const name="unit_xs" value="2" />
+		<const name="unit_sm" value="4" />
+		<const name="unit_md" value="8" />
+		<const name="unit_lg" value="12" />
+		<const name="unit_xl" value="16" />
+
+		<!-- Terminal grid -->
+		<const name="terminal_cols" value="80" />
+		<const name="terminal_rows" value="18" />
+		<const name="char_width" value="4" />
+		<const name="char_height" value="12" />
+
+		<!-- Status bar -->
+		<const name="status_bar_height" value="18" />
+
+		<!-- Opacity -->
+		<const name="opa_full" value="100%" />
+		<const name="opa_high" value="80%" />
+		<const name="opa_muted" value="60%" />
+		<const name="opa_low" value="40%" />
+		<const name="opa_subtle" value="20%" />
+
+		<!-- ═══════════════════ NASA Minimal Theme Colors ═══════════════════ -->
+		<!-- Background colors -->
+		<const name="bg_primary" value="#000000" />
+		<const name="bg_secondary" value="#141414" />
+		<const name="bg_status" value="#141414" />
+
+		<!-- Foreground/text colors -->
+		<const name="fg_primary" value="#E6E6E6" />
+		<const name="fg_secondary" value="#8C8C8C" />
+		<const name="fg_muted" value="#666666" />
+
+		<!-- Status colors -->
+		<const name="color_ok" value="#50DCA0" />
+		<const name="color_warn" value="#F0C850" />
+		<const name="color_err" value="#FF5A5A" />
+
+		<!-- Accent colors -->
+		<const name="accent_primary" value="#50DCA0" />
+		<const name="accent_secondary" value="#5A9FFF" />
+
+		<!-- Cursor colors -->
+		<const name="cursor_block" value="#E6E6E6" />
+		<const name="cursor_text" value="#000000" />
+	</consts>
+
+	<!-- ═══════════════════════════════════════════════════════════════════════
+	     STYLES - Reusable style definitions
+	     ═══════════════════════════════════════════════════════════════════════ -->
+	<styles>
+		<!-- Base terminal style -->
+		<style
+			name="terminal_base"
+			bg_color="#bg_primary"
+			bg_opa="#opa_full"
+			text_color="#fg_primary"
+			text_font="terminal_mono_12"
+			pad_all="0"
+		/>
+
+		<!-- Status bar style -->
+		<style
+			name="status_bar"
+			bg_color="#bg_status"
+			bg_opa="#opa_full"
+			text_color="#fg_primary"
+			text_font="terminal_mono_10"
+			height="#status_bar_height"
+			pad_hor="#unit_sm"
+			pad_ver="#unit_xs"
+		/>
+
+		<!-- Cursor block style -->
+		<style
+			name="cursor_block"
+			bg_color="#cursor_block"
+			bg_opa="#opa_full"
+		/>
+
+		<!-- Cursor underline style -->
+		<style
+			name="cursor_underline"
+			border_color="#cursor_block"
+			border_width="2"
+			border_side="bottom"
+		/>
+
+		<!-- Status indicator: connected -->
+		<style name="status_ok" text_color="#color_ok" />
+
+		<!-- Status indicator: warning -->
+		<style name="status_warn" text_color="#color_warn" />
+
+		<!-- Status indicator: error/disconnected -->
+		<style name="status_err" text_color="#color_err" />
+
+		<!-- Modifier key active -->
+		<style name="modifier_active" text_color="#accent_primary" bg_opa="#opa_subtle" />
+
+		<!-- Modifier key inactive -->
+		<style name="modifier_inactive" text_color="#fg_muted" bg_opa="0" />
+
+		<!-- Disabled/dimmed state -->
+		<style name="disabled" opa="#opa_muted" />
+	</styles>
+
+	<!-- ═══════════════════════════════════════════════════════════════════════
+	     SUBJECTS - Runtime configuration and state variables
+	     ═══════════════════════════════════════════════════════════════════════ -->
+	<subjects>
+		<!-- ═══════════════════ WiFi Configuration ═══════════════════ -->
+		<subject name="wifi_ssid" type="string" default="YourNetworkName" />
+		<subject name="wifi_password" type="string" default="YourPassword" />
+		<subject name="wifi_connected" type="bool" default="false" />
+		<subject name="wifi_rssi" type="int" default="-100" />
+
+		<!-- ═══════════════════ Gateway Configuration ═══════════════════ -->
+		<subject name="gateway_host" type="string" default="192.168.1.100" />
+		<subject name="gateway_port" type="int" default="7681" />
+		<subject name="gateway_path" type="string" default="/ws" />
+		<subject name="gateway_ssl" type="bool" default="false" />
+		<subject name="gateway_sni" type="string" default="" />
+		<subject name="gateway_connected" type="bool" default="false" />
+
+		<!-- Connection timing -->
+		<subject name="connect_timeout_ms" type="int" default="4000" />
+		<subject name="reconnect_delay_ms" type="int" default="800" />
+		<subject name="reconnect_delay_max_ms" type="int" default="5000" />
+		<subject name="ping_interval_ms" type="int" default="15000" />
+
+		<!-- ═══════════════════ Terminal Configuration ═══════════════════ -->
+		<subject name="terminal_cols" type="int" default="80" />
+		<subject name="terminal_rows" type="int" default="18" />
+		<subject name="scrollback_lines" type="int" default="0" />
+		<subject name="cursor_x" type="int" default="0" />
+		<subject name="cursor_y" type="int" default="0" />
+		<subject name="cursor_visible" type="bool" default="true" />
+		<subject name="cursor_blink" type="bool" default="true" />
+		<subject name="cursor_style" type="string" default="block" />
+
+		<!-- ═══════════════════ Input Configuration ═══════════════════ -->
+		<subject name="keyboard_debounce_ms" type="int" default="15" />
+		<subject name="encoder_press_enter" type="bool" default="true" />
+		<subject name="encoder_scroll" type="bool" default="false" />
+		<subject name="encoder_step_lines" type="int" default="1" />
+
+		<!-- Modifier key states -->
+		<subject name="mod_shift" type="bool" default="false" />
+		<subject name="mod_ctrl" type="bool" default="false" />
+		<subject name="mod_alt" type="bool" default="false" />
+		<subject name="mod_fn" type="bool" default="false" />
+		<subject name="mod_sym" type="bool" default="false" />
+
+		<!-- ═══════════════════ Haptics Configuration ═══════════════════ -->
+		<subject name="haptics_enabled" type="bool" default="true" />
+		<subject name="haptics_keypress_ms" type="int" default="8" />
+		<subject name="haptics_bell_ms" type="int" default="40" />
+
+		<!-- ═══════════════════ UI Configuration ═══════════════════ -->
+		<subject name="status_bar_enabled" type="bool" default="true" />
+		<subject name="dark_theme" type="bool" default="true" />
+
+		<!-- ═══════════════════ Logging Configuration ═══════════════════ -->
+		<subject name="serial_baud" type="int" default="115200" />
+		<subject name="debug_websocket" type="bool" default="false" />
+		<subject name="debug_keyboard" type="bool" default="false" />
+
+		<!-- ═══════════════════ Active Profile ═══════════════════ -->
+		<subject name="active_profile" type="string" default="lan" />
+	</subjects>
+
+	<!-- ═══════════════════════════════════════════════════════════════════════
+	     IMAGES - Icon and image assets
+	     ═══════════════════════════════════════════════════════════════════════ -->
+	<images>
+		<!-- Status bar icons -->
+		<image name="icon_wifi_0" file="images/wifi_0.png" />
+		<image name="icon_wifi_1" file="images/wifi_1.png" />
+		<image name="icon_wifi_2" file="images/wifi_2.png" />
+		<image name="icon_wifi_3" file="images/wifi_3.png" />
+		<image name="icon_wifi_off" file="images/wifi_off.png" />
+		<image name="icon_ws_connected" file="images/ws_connected.png" />
+		<image name="icon_ws_disconnected" file="images/ws_disconnected.png" />
+		<image name="icon_ssl" file="images/ssl.png" />
+	</images>
+
+	<!-- ═══════════════════════════════════════════════════════════════════════
+	     FONTS - Terminal and UI fonts
+	     ═══════════════════════════════════════════════════════════════════════ -->
+	<fonts>
+		<!-- Terminal monospace fonts -->
+		<font name="terminal_mono_10" file="fonts/mono_10.bin" size="10" />
+		<font name="terminal_mono_12" file="fonts/mono_12.bin" size="12" />
+		<font name="terminal_mono_14" file="fonts/mono_14.bin" size="14" />
+
+		<!-- UI fonts -->
+		<font name="ui_regular_12" file="fonts/ui_regular_12.bin" size="12" />
+		<font name="ui_bold_12" file="fonts/ui_bold_12.bin" size="12" />
+	</fonts>
+
+</globals>

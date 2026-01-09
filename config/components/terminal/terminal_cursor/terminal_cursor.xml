@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Terminal Cursor Component -->
+<component name="terminal_cursor">
+
+	<previews>
+		<preview width="8" height="14" />
+	</previews>
+
+	<styles>
+		<!-- Block cursor (default) -->
+		<style
+			name="cursor_block"
+			width="#char_width"
+			height="#char_height"
+			bg_color="#cursor_block"
+			bg_opa="#opa_full"
+			radius="0"
+		/>
+
+		<!-- Underline cursor -->
+		<style
+			name="cursor_underline"
+			width="#char_width"
+			height="2"
+			bg_color="#cursor_block"
+			bg_opa="#opa_full"
+			radius="0"
+		/>
+
+		<!-- Bar/line cursor -->
+		<style
+			name="cursor_bar"
+			width="2"
+			height="#char_height"
+			bg_color="#cursor_block"
+			bg_opa="#opa_full"
+			radius="0"
+		/>
+
+		<!-- Blink animation states -->
+		<style name="cursor_visible" opa="#opa_full" />
+		<style name="cursor_hidden" opa="0" />
+	</styles>
+
+	<view extends="lv_obj" id="cursor">
+		<!-- Default: block cursor -->
+		<style name="cursor_block" />
+		<style name="cursor_visible" />
+
+		<!-- Style binding based on cursor_style subject -->
+		<bind_style name="cursor_block" subject="cursor_style" ref_value="block" />
+		<bind_style name="cursor_underline" subject="cursor_style" ref_value="underline" />
+		<bind_style name="cursor_bar" subject="cursor_style" ref_value="bar" />
+
+		<!-- Visibility binding -->
+		<bind_state subject="cursor_visible" ref_value="false" flag="hidden" />
+
+		<!-- Position is set programmatically based on cursor_x, cursor_y -->
+	</view>
+
+	<!-- Blink animation (when cursor_blink is true) -->
+	<animations>
+		<anim target="cursor" subject="cursor_blink" ref_value="true">
+			<keyframe time="0" opa="#opa_full" />
+			<keyframe time="500" opa="0" />
+			<keyframe time="1000" opa="#opa_full" />
+			<repeat>infinite</repeat>
+		</anim>
+	</animations>
+
+</component>

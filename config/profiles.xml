@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Gateway Connection Profiles -->
+<profiles>
+
+	<!-- LAN Profile - Local ttyd server -->
+	<profile name="lan">
+		<subject name="gateway_host" value="192.168.1.100" />
+		<subject name="gateway_port" value="7681" />
+		<subject name="gateway_path" value="/ws" />
+		<subject name="gateway_ssl" value="false" />
+		<subject name="gateway_sni" value="" />
+	</profile>
+
+	<!-- Tailscale Funnel Profile - Remote via Tailscale -->
+	<profile name="tailscale_funnel">
+		<subject name="gateway_host" value="your-machine.ts.net" />
+		<subject name="gateway_port" value="443" />
+		<subject name="gateway_path" value="/term/ws" />
+		<subject name="gateway_ssl" value="true" />
+		<subject name="gateway_sni" value="your-machine.ts.net" />
+	</profile>
+
+	<!-- Cloud Profile - Example cloud-hosted terminal -->
+	<profile name="cloud">
+		<subject name="gateway_host" value="terminal.example.com" />
+		<subject name="gateway_port" value="443" />
+		<subject name="gateway_path" value="/ws" />
+		<subject name="gateway_ssl" value="true" />
+		<subject name="gateway_sni" value="terminal.example.com" />
+	</profile>
+
+</profiles>
