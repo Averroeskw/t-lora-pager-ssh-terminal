@@ -290,12 +290,19 @@ bool ConfigLoader::parseGatewayProfile(const char* xml) {
         return false;
     }
 
+    // Gateway settings are inside <gateway> container
+    XMLElement* gateway = root->FirstChildElement("gateway");
+    if (!gateway) {
+        Serial.println("[ConfigLoader] Missing <gateway> element in profile");
+        return false;
+    }
+
     XMLElement* el;
-    if ((el = root->FirstChildElement("host"))) _config.gateway.host = el->GetText() ? el->GetText() : "";
-    if ((el = root->FirstChildElement("port"))) el->QueryUnsignedText((unsigned int*)&_config.gateway.port);
-    if ((el = root->FirstChildElement("path"))) _config.gateway.path = el->GetText() ? el->GetText() : "";
-    if ((el = root->FirstChildElement("useSsl"))) _config.gateway.useSsl = strcmp(el->GetText(), "true") == 0;
-    if ((el = root->FirstChildElement("sni"))) _config.gateway.sni = el->GetText() ? el->GetText() : "";
+    if ((el = gateway->FirstChildElement("host"))) _config.gateway.host = el->GetText() ? el->GetText() : "";
+    if ((el = gateway->FirstChildElement("port"))) el->QueryUnsignedText((unsigned int*)&_config.gateway.port);
+    if ((el = gateway->FirstChildElement("path"))) _config.gateway.path = el->GetText() ? el->GetText() : "";
+    if ((el = gateway->FirstChildElement("useSsl"))) _config.gateway.useSsl = strcmp(el->GetText(), "true") == 0;
+    if ((el = gateway->FirstChildElement("sni"))) _config.gateway.sni = el->GetText() ? el->GetText() : "";
 
     return true;
 }
