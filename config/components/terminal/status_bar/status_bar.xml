@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <component>
 	<styles>
 		<style name="bar" width="100%" height="#status_bar_height" bg_color="#bg_status" />

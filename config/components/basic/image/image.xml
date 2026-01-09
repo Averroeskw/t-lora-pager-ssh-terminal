@@ -1,0 +1,8 @@
+<component>
+	<api>
+		<prop name="src" type="string" default="" />
+	</api>
+	<view extends="lv_image">
+		<src>$src</src>
+	</view>
+</component>

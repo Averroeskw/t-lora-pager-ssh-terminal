@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <screen>
 	<styles>
 		<style name="screen_bg" bg_color="#bg_primary" />
@@ -7,7 +6,6 @@
 	<view flex_flow="column" width="100%" height="100%">
 		<style name="screen_bg" />
 
-		<!-- Status Bar -->
 		<row
 			width="100%"
 			height="#status_bar_height"
@@ -18,16 +16,13 @@
 		>
 			<bind_state subject="status_bar_enabled" ref_value="false" flag="hidden" />
 
-			<!-- Left: Connection indicators -->
 			<row style_gap="#unit_sm">
 				<wifi_indicator />
 				<websocket_indicator />
 			</row>
 
-			<!-- Center: Host -->
 			<label text="$gateway_host" style_text_font="terminal_mono_10" />
 
-			<!-- Right: Modifier keys -->
 			<row style_gap="#unit_xs">
 				<modifier_indicator key="S" subject="mod_shift" />
 				<modifier_indicator key="C" subject="mod_ctrl" />
@@ -37,7 +32,6 @@
 			</row>
 		</row>
 
-		<!-- Terminal Area -->
 		<div
 			id="terminal_area"
 			flex_grow="1"
