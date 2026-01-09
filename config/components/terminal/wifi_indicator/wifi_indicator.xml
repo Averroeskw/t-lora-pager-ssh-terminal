@@ -1,44 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- WiFi Signal Indicator Component -->
-<component name="wifi_indicator">
-
-	<previews>
-		<preview width="24" height="16" />
-	</previews>
-
-	<styles>
-		<style name="icon_connected" text_color="#color_ok" />
-		<style name="icon_disconnected" text_color="#color_err" />
-		<style name="icon_weak" text_color="#color_warn" />
-	</styles>
-
-	<view extends="lv_obj" width="content" height="100%" bg_opa="0">
-		<!-- WiFi icon - changes based on connection state and signal -->
-		<lv_image id="wifi_icon">
-			<!-- Default: disconnected -->
-			<style name="icon_disconnected" />
-			<src>#icon_wifi_off</src>
-
-			<!-- Bind icon source based on RSSI -->
-			<bind_state subject="wifi_connected" ref_value="true">
-				<bind_if subject="wifi_rssi" condition="gte" ref_value="-50">
-					<src>#icon_wifi_3</src>
-					<style name="icon_connected" />
-				</bind_if>
-				<bind_if subject="wifi_rssi" condition="gte" ref_value="-65">
-					<src>#icon_wifi_2</src>
-					<style name="icon_connected" />
-				</bind_if>
-				<bind_if subject="wifi_rssi" condition="gte" ref_value="-80">
-					<src>#icon_wifi_1</src>
-					<style name="icon_weak" />
-				</bind_if>
-				<bind_if subject="wifi_rssi" condition="lt" ref_value="-80">
-					<src>#icon_wifi_0</src>
-					<style name="icon_weak" />
-				</bind_if>
-			</bind_state>
-		</lv_image>
+<component>
+	<view>
+		<image src="#icon_wifi_off" style_text_color="#color_err" />
+		<bind_state subject="wifi_connected" ref_value="true">
+			<image src="#icon_wifi_3" style_text_color="#color_ok" />
+		</bind_state>
 	</view>
-
 </component>

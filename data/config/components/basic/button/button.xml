@@ -1,37 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Basic Button Component -->
-<component name="button">
-
-	<previews>
-		<preview style_pad_all="4" />
-	</previews>
-
+<component>
 	<api>
-		<prop name="label" type="string" default="Button" help="Button text label" />
+		<prop name="label" type="string" default="Button" />
 	</api>
 
 	<styles>
-		<style
-			name="base"
-			radius="#unit_md"
-			bg_opa="#opa_full"
-			width="content"
-			height="content"
-			pad_hor="#unit_lg"
-			pad_ver="#unit_md"
-			text_font="ui_regular_12"
-			bg_color="#accent_primary"
-			text_color="#bg_primary"
-		/>
+		<style name="base" radius="#unit_md" bg_color="#accent_primary" text_color="#bg_primary" pad_hor="#unit_lg" pad_ver="#unit_md" />
 		<style name="pressed" bg_color="#color_ok" />
-		<style name="disabled" opa="#opa_muted" />
 	</styles>
 
-	<view extends="lv_button">
-		<remove_style_all />
+	<view extends="button">
 		<style name="base" />
 		<style name="pressed" selector="pressed" />
-		<lv_label text="$label" align="center" />
+		<label text="$label" align="center" />
 	</view>
-
 </component>

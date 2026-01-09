@@ -1,52 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Terminal Character Grid Component -->
-<component name="terminal_grid">
-
-	<previews>
-		<preview width="320" height="216" />
-	</previews>
-
-	<api>
-		<prop name="cols" type="int" default="80" help="Number of columns" />
-		<prop name="rows" type="int" default="18" help="Number of rows" />
-	</api>
-
+<component>
 	<styles>
-		<style
-			name="grid_base"
-			width="100%"
-			height="100%"
-			bg_opa="0"
-			text_font="terminal_mono_12"
-			text_color="#fg_primary"
-			pad_all="0"
-		/>
-		<!-- Character cell styles for different attributes -->
-		<style name="char_normal" text_color="#fg_primary" bg_opa="0" />
-		<style name="char_bold" text_color="#fg_primary" text_font="terminal_mono_12" />
-		<style name="char_dim" text_color="#fg_muted" />
-		<style name="char_inverse" text_color="#bg_primary" bg_color="#fg_primary" bg_opa="#opa_full" />
+		<style name="grid" width="100%" height="100%" text_font="terminal_mono_12" text_color="#fg_primary" />
 	</styles>
 
-	<view extends="lv_obj">
-		<style name="grid_base" />
-
-		<!--
-		     Terminal grid is rendered programmatically.
-		     This component defines the container and base styles.
-		     Actual character cells are created/updated by C code.
-		-->
-
-		<!-- Grid renders as lv_label with monospace font -->
-		<lv_label
-			id="terminal_text"
-			width="100%"
-			height="100%"
-			text=""
-			text_font="terminal_mono_12"
-		>
-			<style name="char_normal" />
-		</lv_label>
+	<view>
+		<style name="grid" />
+		<label id="terminal_text" width="100%" height="100%" text="" />
 	</view>
-
 </component>

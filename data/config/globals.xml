@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- T-LoRa Pager SSH Terminal - Global Configuration -->
 <globals>
 
-	<!-- ═══════════════════════════════════════════════════════════════════════
-	     CONSTANTS - Spacing, sizing, colors
-	     ═══════════════════════════════════════════════════════════════════════ -->
+	<api>
+		<!-- Enums can be defined here -->
+	</api>
+
 	<consts>
 		<!-- Spacing units -->
 		<const name="unit_xs" value="2" />

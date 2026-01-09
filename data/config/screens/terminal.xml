@@ -1,75 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- T-LoRa Pager SSH Terminal - Main Terminal Screen -->
-<screen name="terminal">
-
+<screen>
 	<styles>
-		<style name="screen_base" bg_color="#bg_primary" bg_opa="#opa_full" />
+		<style name="screen_bg" bg_color="#bg_primary" />
 	</styles>
 
-	<view>
-		<style name="screen_base" />
-		<remove_style_all />
+	<view flex_flow="column" width="100%" height="100%">
+		<style name="screen_bg" />
 
-		<!-- Main vertical layout: status bar + terminal area -->
-		<lv_obj
+		<!-- Status Bar -->
+		<row
 			width="100%"
-			height="100%"
-			layout="flex"
-			flex_flow="column"
-			pad_all="0"
-			bg_opa="0"
+			height="#status_bar_height"
+			style_flex_main_place="space-between"
+			style_flex_cross_place="center"
+			style_pad_hor="#unit_sm"
+			style_bg_color="#bg_status"
 		>
-			<!-- Status Bar (conditional) -->
-			<lv_obj
-				width="100%"
-				height="#status_bar_height"
-				layout="flex"
-				flex_flow="row"
-				flex_main_place="space-between"
-				flex_cross_place="center"
-			>
-				<bind_state subject="status_bar_enabled" ref_value="false" flag="hidden" />
-				<style name="status_bar" />
+			<bind_state subject="status_bar_enabled" ref_value="false" flag="hidden" />
 
-				<!-- Left: Connection status -->
-				<lv_obj layout="flex" flex_flow="row" gap="#unit_sm" height="100%" bg_opa="0">
-					<!-- WiFi indicator -->
-					<component name="wifi_indicator" />
-					<!-- WebSocket indicator -->
-					<component name="websocket_indicator" />
-				</lv_obj>
+			<!-- Left: Connection indicators -->
+			<row style_gap="#unit_sm">
+				<wifi_indicator />
+				<websocket_indicator />
+			</row>
 
-				<!-- Center: Host info -->
-				<lv_label text="$gateway_host" />
+			<!-- Center: Host -->
+			<label text="$gateway_host" style_text_font="terminal_mono_10" />
 
-				<!-- Right: Modifier keys -->
-				<lv_obj layout="flex" flex_flow="row" gap="#unit_xs" height="100%" bg_opa="0">
-					<component name="modifier_indicator" key="SHIFT" subject="mod_shift" />
-					<component name="modifier_indicator" key="CTRL" subject="mod_ctrl" />
-					<component name="modifier_indicator" key="ALT" subject="mod_alt" />
-					<component name="modifier_indicator" key="FN" subject="mod_fn" />
-					<component name="modifier_indicator" key="SYM" subject="mod_sym" />
-				</lv_obj>
-			</lv_obj>
+			<!-- Right: Modifier keys -->
+			<row style_gap="#unit_xs">
+				<modifier_indicator key="S" subject="mod_shift" />
+				<modifier_indicator key="C" subject="mod_ctrl" />
+				<modifier_indicator key="A" subject="mod_alt" />
+				<modifier_indicator key="F" subject="mod_fn" />
+				<modifier_indicator key="Y" subject="mod_sym" />
+			</row>
+		</row>
 
-			<!-- Terminal Display Area -->
-			<lv_obj
-				id="terminal_area"
-				width="100%"
-				flex_grow="1"
-				bg_opa="0"
-				pad_all="#unit_xs"
-			>
-				<style name="terminal_base" />
-
-				<!-- Terminal grid container -->
-				<component name="terminal_grid" />
-
-				<!-- Cursor overlay -->
-				<component name="terminal_cursor" />
-			</lv_obj>
-
-		</lv_obj>
+		<!-- Terminal Area -->
+		<div
+			id="terminal_area"
+			flex_grow="1"
+			width="100%"
+			style_pad_all="#unit_xs"
+			style_bg_opa="0"
+		>
+			<terminal_grid />
+			<terminal_cursor />
+		</div>
 	</view>
-
 </screen>
