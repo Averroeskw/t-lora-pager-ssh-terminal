@@ -145,6 +145,11 @@ bool ConfigLoader::loadConfig(const char* path) {
         loadTheme();
     }
 
+    // Load keymap if specified
+    if (_config.input.keyboard.keymapFile.length() > 0) {
+        loadKeymap();
+    }
+
     _loaded = true;
     Serial.println("[ConfigLoader] Config loaded successfully");
     return true;
@@ -381,6 +386,97 @@ bool ConfigLoader::parseTheme(const char* xml) {
         if ((el = statusBar->FirstChildElement("showWebSocket"))) _config.theme.statusBar.showWebSocket = strcmp(el->GetText(), "true") == 0;
         if ((el = statusBar->FirstChildElement("showModifiers"))) _config.theme.statusBar.showModifiers = strcmp(el->GetText(), "true") == 0;
     }
+
+    return true;
+}
+
+bool ConfigLoader::loadKeymap() {
+    if (_config.input.keyboard.keymapFile.isEmpty()) {
+        return false;
+    }
+
+    // Ensure path starts with /
+    String path = _config.input.keyboard.keymapFile;
+    if (!path.startsWith("/")) {
+        path = "/" + path;
+    }
+
+    Serial.printf("[ConfigLoader] Loading keymap: %s\n", path.c_str());
+
+    String xml = readFile(path.c_str());
+    if (xml.isEmpty()) {
+        Serial.println("[ConfigLoader] Keymap file not found, using defaults");
+        return false;
+    }
+
+    return parseKeymap(xml.c_str());
+}
+
+bool ConfigLoader::parseKeymap(const char* xml) {
+    XMLDocument doc;
+    if (doc.Parse(xml) != XML_SUCCESS) {
+        Serial.printf("[ConfigLoader] Keymap XML parse error: %s\n", doc.ErrorStr());
+        return false;
+    }
+
+    XMLElement* root = doc.FirstChildElement("keymap");
+    if (!root) {
+        Serial.println("[ConfigLoader] Missing keymap root element");
+        return false;
+    }
+
+    const char* name = root->Attribute("name");
+    if (name) _config.keymap.name = name;
+
+    // Clear existing keys and modifiers
+    _config.keymap.keys.clear();
+    _config.keymap.modifiers.clear();
+
+    // Parse keys section
+    XMLElement* keys = root->FirstChildElement("keys");
+    if (keys) {
+        for (XMLElement* key = keys->FirstChildElement("key"); key; key = key->NextSiblingElement("key")) {
+            KeyMapping km;
+            km.code = -1;  // Default: not a control key
+
+            const char* id = key->Attribute("id");
+            const char* normal = key->Attribute("normal");
+            const char* shift = key->Attribute("shift");
+
+            if (id) km.id = id;
+            if (normal) km.normal = normal;
+            if (shift) km.shift = shift;
+
+            // Check for code attribute (control keys)
+            int code = -1;
+            if (key->QueryIntAttribute("code", &code) == XML_SUCCESS) {
+                km.code = code;
+            }
+
+            _config.keymap.keys.push_back(km);
+        }
+    }
+
+    // Parse modifiers section
+    XMLElement* modifiers = root->FirstChildElement("modifiers");
+    if (modifiers) {
+        for (XMLElement* mod = modifiers->FirstChildElement("modifier"); mod; mod = mod->NextSiblingElement("modifier")) {
+            ModifierDef md;
+
+            const char* id = mod->Attribute("id");
+            const char* mode = mod->Attribute("mode");
+
+            if (id) md.id = id;
+            if (mode) md.mode = mode;
+
+            _config.keymap.modifiers.push_back(md);
+        }
+    }
+
+    Serial.printf("[ConfigLoader] Loaded keymap '%s': %d keys, %d modifiers\n",
+        _config.keymap.name.c_str(),
+        _config.keymap.keys.size(),
+        _config.keymap.modifiers.size());
 
     return true;
 }

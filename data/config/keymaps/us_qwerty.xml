@@ -1,71 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <keymap name="us_qwerty" version="1.0">
 
-  <!-- Letters -->
-  <k id="A" normal="a" shift="A"/>
-  <k id="B" normal="b" shift="B"/>
-  <k id="C" normal="c" shift="C"/>
-  <k id="D" normal="d" shift="D"/>
-  <k id="E" normal="e" shift="E"/>
-  <k id="F" normal="f" shift="F"/>
-  <k id="G" normal="g" shift="G"/>
-  <k id="H" normal="h" shift="H"/>
-  <k id="I" normal="i" shift="I"/>
-  <k id="J" normal="j" shift="J"/>
-  <k id="K" normal="k" shift="K"/>
-  <k id="L" normal="l" shift="L"/>
-  <k id="M" normal="m" shift="M"/>
-  <k id="N" normal="n" shift="N"/>
-  <k id="O" normal="o" shift="O"/>
-  <k id="P" normal="p" shift="P"/>
-  <k id="Q" normal="q" shift="Q"/>
-  <k id="R" normal="r" shift="R"/>
-  <k id="S" normal="s" shift="S"/>
-  <k id="T" normal="t" shift="T"/>
-  <k id="U" normal="u" shift="U"/>
-  <k id="V" normal="v" shift="V"/>
-  <k id="W" normal="w" shift="W"/>
-  <k id="X" normal="x" shift="X"/>
-  <k id="Y" normal="y" shift="Y"/>
-  <k id="Z" normal="z" shift="Z"/>
+  <keys>
+    <!-- Letters -->
+    <key id="A" normal="a" shift="A"/>
+    <key id="B" normal="b" shift="B"/>
+    <key id="C" normal="c" shift="C"/>
+    <key id="D" normal="d" shift="D"/>
+    <key id="E" normal="e" shift="E"/>
+    <key id="F" normal="f" shift="F"/>
+    <key id="G" normal="g" shift="G"/>
+    <key id="H" normal="h" shift="H"/>
+    <key id="I" normal="i" shift="I"/>
+    <key id="J" normal="j" shift="J"/>
+    <key id="K" normal="k" shift="K"/>
+    <key id="L" normal="l" shift="L"/>
+    <key id="M" normal="m" shift="M"/>
+    <key id="N" normal="n" shift="N"/>
+    <key id="O" normal="o" shift="O"/>
+    <key id="P" normal="p" shift="P"/>
+    <key id="Q" normal="q" shift="Q"/>
+    <key id="R" normal="r" shift="R"/>
+    <key id="S" normal="s" shift="S"/>
+    <key id="T" normal="t" shift="T"/>
+    <key id="U" normal="u" shift="U"/>
+    <key id="V" normal="v" shift="V"/>
+    <key id="W" normal="w" shift="W"/>
+    <key id="X" normal="x" shift="X"/>
+    <key id="Y" normal="y" shift="Y"/>
+    <key id="Z" normal="z" shift="Z"/>
 
-  <!-- Digits -->
-  <k id="1" normal="1" shift="!"/>
-  <k id="2" normal="2" shift="@"/>
-  <k id="3" normal="3" shift="#"/>
-  <k id="4" normal="4" shift="$"/>
-  <k id="5" normal="5" shift="%"/>
-  <k id="6" normal="6" shift="^"/>
-  <k id="7" normal="7" shift="&amp;"/>
-  <k id="8" normal="8" shift="*"/>
-  <k id="9" normal="9" shift="("/>
-  <k id="0" normal="0" shift=")"/>
+    <!-- Digits -->
+    <key id="1" normal="1" shift="!"/>
+    <key id="2" normal="2" shift="@"/>
+    <key id="3" normal="3" shift="#"/>
+    <key id="4" normal="4" shift="$"/>
+    <key id="5" normal="5" shift="%"/>
+    <key id="6" normal="6" shift="^"/>
+    <key id="7" normal="7" shift="&amp;"/>
+    <key id="8" normal="8" shift="*"/>
+    <key id="9" normal="9" shift="("/>
+    <key id="0" normal="0" shift=")"/>
 
-  <!-- Punctuation -->
-  <k id="COMMA"  normal="," shift="&lt;"/>
-  <k id="DOT"    normal="." shift="&gt;"/>
-  <k id="MINUS"  normal="-" shift="_"/>
-  <k id="EQUAL"  normal="=" shift="+"/>
-  <k id="SLASH"  normal="/" shift="?"/>
-  <k id="SEMICOLON" normal=";" shift=":"/>
-  <k id="QUOTE"  normal="&apos;" shift="&quot;"/>
-  <k id="LBRACKET" normal="[" shift="{"/>
-  <k id="RBRACKET" normal="]" shift="}"/>
-  <k id="BACKSLASH" normal="\\" shift="|"/>
-  <k id="BACKTICK" normal="`" shift="~"/>
+    <!-- Punctuation -->
+    <key id="COMMA" normal="," shift="&lt;"/>
+    <key id="DOT" normal="." shift="&gt;"/>
+    <key id="MINUS" normal="-" shift="_"/>
+    <key id="EQUAL" normal="=" shift="+"/>
+    <key id="SLASH" normal="/" shift="?"/>
+    <key id="SEMICOLON" normal=";" shift=":"/>
+    <key id="QUOTE" normal="&apos;" shift="&quot;"/>
+    <key id="LBRACKET" normal="[" shift="{"/>
+    <key id="RBRACKET" normal="]" shift="}"/>
+    <key id="BACKSLASH" normal="\" shift="|"/>
+    <key id="BACKTICK" normal="`" shift="~"/>
 
-  <!-- Control keys (ASCII codes) -->
-  <k id="ENTER" code="10"/>
-  <k id="TAB" code="9"/>
-  <k id="ESC" code="27"/>
-  <k id="BACKSPACE" code="127"/>
-  <k id="SPACE" code="32"/>
+    <!-- Control keys (ASCII codes) -->
+    <key id="ENTER" code="10"/>
+    <key id="TAB" code="9"/>
+    <key id="ESC" code="27"/>
+    <key id="BACKSPACE" code="127"/>
+    <key id="SPACE" code="32"/>
+  </keys>
 
-  <!-- Modifiers -->
-  <modifier id="SHIFT" mode="oneshot"/>
-  <modifier id="CTRL"  mode="sticky"/>
-  <modifier id="ALT"   mode="sticky"/>
-  <modifier id="FN"    mode="sticky"/>
-  <modifier id="SYM"   mode="sticky"/>
+  <modifiers>
+    <modifier id="SHIFT" mode="oneshot"/>
+    <modifier id="CTRL" mode="sticky"/>
+    <modifier id="ALT" mode="sticky"/>
+    <modifier id="FN" mode="sticky"/>
+    <modifier id="SYM" mode="sticky"/>
+  </modifiers>
 
 </keymap>

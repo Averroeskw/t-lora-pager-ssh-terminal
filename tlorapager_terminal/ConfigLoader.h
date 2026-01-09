@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <Preferences.h>
+#include <vector>
 
 // Configuration structures
 struct WifiConfig {
@@ -95,6 +96,25 @@ struct ThemeConfig {
     StatusBarConfig statusBar;
 };
 
+// Keymap structures
+struct KeyMapping {
+    String id;           // Key identifier (e.g., "A", "1", "COMMA")
+    String normal;       // Normal character output
+    String shift;        // Shifted character output
+    int code;            // ASCII code for control keys (-1 if using normal/shift)
+};
+
+struct ModifierDef {
+    String id;           // Modifier name (e.g., "SHIFT", "CTRL")
+    String mode;         // "oneshot" or "sticky"
+};
+
+struct KeymapConfig {
+    String name;
+    std::vector<KeyMapping> keys;
+    std::vector<ModifierDef> modifiers;
+};
+
 struct TLoraConfig {
     WifiConfig wifi;
     GatewayConfig gateway;
@@ -104,6 +124,7 @@ struct TLoraConfig {
     UiConfig ui;
     LoggingConfig logging;
     ThemeConfig theme;
+    KeymapConfig keymap;
 };
 
 class ConfigLoader {
@@ -122,6 +143,9 @@ public:
 
     // Load theme from file specified in config
     bool loadTheme();
+
+    // Load keymap from file specified in config
+    bool loadKeymap();
 
     // NVS operations for sensitive data
     bool saveWifiToNvs(const String& ssid, const String& password);
@@ -159,6 +183,7 @@ private:
     bool parseMainConfig(const char* xml);
     bool parseGatewayProfile(const char* xml);
     bool parseTheme(const char* xml);
+    bool parseKeymap(const char* xml);
 
     // NVS namespace
     static constexpr const char* NVS_NAMESPACE = "tlora_cfg";
