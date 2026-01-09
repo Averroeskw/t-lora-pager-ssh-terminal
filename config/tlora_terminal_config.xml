@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tloraTerminalConfig version="1.0">
+<tloraTerminalConfig version="1.0"
+                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                     xsi:noNamespaceSchemaLocation="schema/tlora_terminal_config.xsd">
 
   <wifi>
     <ssid>YourNetworkName</ssid>

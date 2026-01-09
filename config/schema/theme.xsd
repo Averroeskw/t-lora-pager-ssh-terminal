@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:complexType name="colorType">
+    <xs:attribute name="r" type="xs:unsignedByte" use="required"/>
+    <xs:attribute name="g" type="xs:unsignedByte" use="required"/>
+    <xs:attribute name="b" type="xs:unsignedByte" use="required"/>
+  </xs:complexType>
+
+  <xs:element name="theme">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="colors">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="bg" type="colorType"/>
+              <xs:element name="fg" type="colorType"/>
+              <xs:element name="muted" type="colorType"/>
+              <xs:element name="ok" type="colorType"/>
+              <xs:element name="warn" type="colorType"/>
+              <xs:element name="err" type="colorType"/>
+              <xs:element name="statusBg" type="colorType"/>
+              <xs:element name="statusFg" type="colorType"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="terminal">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="cursor">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="style" type="xs:string"/>
+                    <xs:element name="blink" type="xs:boolean"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="selection">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="invert" type="xs:boolean"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="statusBar">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="heightPx" type="xs:unsignedByte"/>
+              <xs:element name="icons" type="xs:boolean"/>
+              <xs:element name="showWifi" type="xs:boolean"/>
+              <xs:element name="showWebSocket" type="xs:boolean"/>
+              <xs:element name="showModifiers" type="xs:boolean"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="version" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

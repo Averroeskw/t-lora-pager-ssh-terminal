@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<keymap name="us_qwerty" version="1.0">
+<keymap name="us_qwerty" version="1.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="../schema/keymap.xsd">
 
   <keys>
     <!-- Letters -->

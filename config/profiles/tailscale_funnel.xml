@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<gatewayProfile name="tailscale_funnel" version="1.0">
+<gatewayProfile name="tailscale_funnel" version="1.0"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:noNamespaceSchemaLocation="../schema/gateway_profile.xsd">
   <gateway>
     <host>your-machine.ts.net</host>
     <port>443</port>
