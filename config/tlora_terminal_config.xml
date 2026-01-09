@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tloraTerminalConfig version="1.0">
+
+  <wifi>
+    <ssid>YourNetworkName</ssid>
+    <password>YourPassword</password>
+    <!-- ESP32 uses 2.4GHz only -->
+  </wifi>
+
+  <gateway>
+    <!-- LAN example -->
+    <host>192.168.1.100</host>
+    <port>7681</port>
+    <path>/ws</path>
+    <useSsl>false</useSsl>
+
+    <!-- optional -->
+    <connectTimeoutMs>4000</connectTimeoutMs>
+    <reconnectDelayMs>800</reconnectDelayMs>
+    <maxReconnectDelayMs>5000</maxReconnectDelayMs>
+    <pingIntervalMs>15000</pingIntervalMs>
+  </gateway>
+
+  <terminal>
+    <!-- README says 80x18 grid -->
+    <cols>80</cols>
+    <rows>18</rows>
+
+    <!-- UI scaling knobs -->
+    <font>
+      <name>mono</name>
+      <size>14</size>
+    </font>
+
+    <!-- Scrollback is a "future feature" in README; keep 0 to disable for now -->
+    <scrollbackLines>0</scrollbackLines>
+  </terminal>
+
+  <input>
+    <keyboard>
+      <keymapFile>config/keymaps/us_qwerty.xml</keymapFile>
+      <debounceMs>15</debounceMs>
+    </keyboard>
+
+    <encoder>
+      <pressSendsEnter>true</pressSendsEnter>
+      <rotateScrollEnabled>false</rotateScrollEnabled>
+      <rotateStepLines>1</rotateStepLines>
+    </encoder>
+  </input>
+
+  <haptics>
+    <enabled>true</enabled>
+    <keypressMs>8</keypressMs>
+    <bellMs>40</bellMs>
+  </haptics>
+
+  <ui>
+    <statusBarEnabled>true</statusBarEnabled>
+    <themeFile>config/themes/nasa_minimal.xml</themeFile>
+  </ui>
+
+  <logging>
+    <serialBaud>115200</serialBaud>
+    <debugWebSocket>false</debugWebSocket>
+    <debugKeyboard>false</debugKeyboard>
+  </logging>
+
+</tloraTerminalConfig>

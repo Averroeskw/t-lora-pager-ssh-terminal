@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="tloraTerminalConfig">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="wifi" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="ssid" type="xs:string"/>
+              <xs:element name="password" type="xs:string"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="gateway">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="host" type="xs:string"/>
+              <xs:element name="port" type="xs:unsignedShort"/>
+              <xs:element name="path" type="xs:string"/>
+              <xs:element name="useSsl" type="xs:boolean"/>
+              <xs:element name="connectTimeoutMs" type="xs:unsignedInt" minOccurs="0"/>
+              <xs:element name="reconnectDelayMs" type="xs:unsignedInt" minOccurs="0"/>
+              <xs:element name="maxReconnectDelayMs" type="xs:unsignedInt" minOccurs="0"/>
+              <xs:element name="pingIntervalMs" type="xs:unsignedInt" minOccurs="0"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="terminal">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="cols" type="xs:positiveInteger"/>
+              <xs:element name="rows" type="xs:positiveInteger"/>
+              <xs:element name="scrollbackLines" type="xs:nonNegativeInteger" minOccurs="0"/>
+              <xs:element name="font" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="name" type="xs:string" minOccurs="0"/>
+                    <xs:element name="size" type="xs:positiveInteger" minOccurs="0"/>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+
+        <xs:element name="input" minOccurs="0" />
+        <xs:element name="haptics" minOccurs="0" />
+        <xs:element name="ui" minOccurs="0" />
+        <xs:element name="logging" minOccurs="0" />
+
+      </xs:sequence>
+
+      <xs:attribute name="version" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>
