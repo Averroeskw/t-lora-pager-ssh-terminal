@@ -7,7 +7,7 @@ Uses **LilyGoLib** for hardware abstraction - the same approach proven in the [k
 ## Hardware Specifications
 
 | Component | Specification |
-|-----------|---------------|
+| --- | --- |
 | **Display** | 2.33" IPS LCD, 480x222 pixels, ST7796 driver |
 | **MCU** | ESP32-S3 (dual-core 240MHz) |
 | **Flash** | 16MB |
@@ -24,8 +24,9 @@ Uses **LilyGoLib** for hardware abstraction - the same approach proven in the [k
 ## Pin Configuration (Reference)
 
 ### Display (ST7796)
+
 | Function | GPIO |
-|----------|------|
+| --- | --- |
 | CS | 38 |
 | DC | 37 |
 | Backlight | 42 (16-level PWM) |
@@ -34,14 +35,16 @@ Uses **LilyGoLib** for hardware abstraction - the same approach proven in the [k
 | SCK | 35 |
 
 ### I2C Bus (Shared)
+
 | Function | GPIO |
-|----------|------|
+| --- | --- |
 | SDA | 3 |
 | SCL | 2 |
 
 ### I2C Devices
+
 | Device | Address | Function |
-|--------|---------|----------|
+| --- | --- | --- |
 | TCA8418 | 0x34 | Keyboard controller |
 | XL9555 | 0x20 | I/O expander |
 | ES8311 | 0x18 | Audio codec |
@@ -52,15 +55,17 @@ Uses **LilyGoLib** for hardware abstraction - the same approach proven in the [k
 | DRV2605 | 0x5A | Haptic driver |
 
 ### Keyboard
+
 | Function | GPIO/Value |
-|----------|------------|
+| --- | --- |
 | I2C Address | 0x34 |
 | Interrupt | GPIO 6 |
 | Backlight | GPIO 46 |
 
 ### Rotary Encoder
+
 | Function | GPIO |
-|----------|------|
+| --- | --- |
 | A | 40 |
 | B | 41 |
 | Button | 7 |
@@ -68,16 +73,18 @@ Uses **LilyGoLib** for hardware abstraction - the same approach proven in the [k
 ## Requirements
 
 ### Hardware
-- LilyGo T-LoRa Pager
-- USB-C cable for programming
+
+* LilyGo T-LoRa Pager
+* USB-C cable for programming
 
 ### Software
-- [PlatformIO](https://platformio.org/)
-- Libraries (automatically installed):
-  - LilyGoLib (hardware abstraction)
-  - LV_Helper (LVGL display)
-  - WebSockets (by Links2004)
-  - ArduinoJson
+
+* [PlatformIO](https://platformio.org/)
+* Libraries (automatically installed):
+  + LilyGoLib (hardware abstraction)
+  + LV_Helper (LVGL display)
+  + WebSockets (by Links2004)
+  + ArduinoJson
 
 ## Installation
 
@@ -127,45 +134,71 @@ const bool USE_SSL = true;
 
 ## Terminal Features
 
-- **80x18 character grid** (largest of all supported devices!)
-- **Full QWERTY keyboard** with TCA8418 controller via LilyGoLib
-- **Rotary encoder** - press for Enter, rotate for scroll (future)
-- **Status bar** showing WiFi, WebSocket, and modifier key states
-- **Haptic feedback** on key presses and bell character
-- **Auto-reconnect** on disconnect
-- **LVGL-based UI** for smooth rendering
+* **80x18 character grid** (largest of all supported devices!)
+* **Full QWERTY keyboard** with TCA8418 controller via LilyGoLib
+* **Rotary encoder** - press for Enter, rotate for scroll (future)
+* **Status bar** showing WiFi, WebSocket, and modifier key states
+* **Haptic feedback** on key presses and bell character
+* **Auto-reconnect** on disconnect
+* **LVGL-based UI** for smooth rendering
 
 ## Keyboard
 
-The T-LoRa Pager has a full QWERTY keyboard handled by LilyGoLib:
+The T-LoRa Pager has a compact **BlackBerry-style** QWERTY keyboard handled by LilyGoLib:
 
 ```
-┌──────────────────────────────────────────────────┐
-│  Q   W   E   R   T   Y   U   I   O   P   ⌫      │
-│   A   S   D   F   G   H   J   K   L   ↵         │
-│  ⇧   Z   X   C   V   B   N   M   ,   .   ⇧     │
-│  Fn  Ctrl  Alt     SPACE      Sym  ←   →       │
-└──────────────────────────────────────────────────┘
-             [Rotary Encoder]
+┌───────────────────────────────────────────────────────────────┐
+│  1    2    3    4    5    6    7    8    9    0              │
+│  Q    W    E    R    T    Y    U    I    O    P              │
+│                                                               │
+│    A    S    D    F    G    H    J    K    L    [←]          │
+│                                                 bksp          │
+│                                                               │
+│  [⇧]   Z    X    C    V    B    N    M   [@]   [↵]          │
+│  shift                                  org   enter          │
+│                                                               │
+│  [Fn]  [...]      [SPACE]           [CAP]                    │
+│                                      org                      │
+└───────────────────────────────────────────────────────────────┘
+
+         Rotary Encoder: [←][Center][→] + Rotation
 ```
+
+### Keyboard I2C Interface
+
+| Signal | GPIO |
+|--------|------|
+| INT | IO06 |
+| SDA | IO03 |
+| SCL | IO02 |
+
+### Rotary Encoder
+
+| Signal | GPIO |
+|--------|------|
+| A | IO40 |
+| B | IO41 |
+| Center | IO07 |
+
+**Note:** Numbers 1-0 share keys with Q-P (use Fn modifier). Orange accent keys: `@` and `CAP`.
 
 ### Modifier Keys
 
 | Key | Function |
-|-----|----------|
-| **Shift** | Toggle uppercase (auto-releases after one key) |
-| **Ctrl** | Send control characters (Ctrl+C, Ctrl+D, etc.) |
-| **Fn** | Function key modifier |
-| **Sym** | Symbol key modifier |
+| --- | --- |
+| **Shift (⇧)** | Toggle uppercase (auto-releases after one key) |
+| **Fn** | Access numbers (1-0) and special characters |
+| **CAP** | Caps lock toggle (orange key) |
+| **@** | Direct @ symbol input (orange key) |
 | **Encoder Press** | Send Enter |
 | **Encoder Rotate** | Scroll (future feature) |
 
 ### Key Bindings
 
 | Key | Function |
-|-----|----------|
-| Enter | Send newline |
-| Backspace | Send delete (0x7F) |
+| --- | --- |
+| Enter (↵) | Send newline |
+| Backspace (←) | Send delete (0x7F) |
 | Ctrl+C | Send interrupt (0x03) |
 | Ctrl+D | Send EOF (0x04) |
 | Ctrl+Z | Suspend (0x1A) |
@@ -175,6 +208,7 @@ The T-LoRa Pager has a full QWERTY keyboard handled by LilyGoLib:
 ### Display issues
 
 LilyGoLib handles display initialization automatically. If you have issues:
+
 1. Ensure you're using the latest LilyGoLib from GitHub
 2. Check serial output for initialization errors
 3. Verify the board is a genuine T-LoRa Pager
@@ -239,23 +273,23 @@ t-lora-pager/
 
 The T-LoRa Pager has many features that could be integrated:
 
-- **LoRa Mesh**: Use LoRa for terminal relay when WiFi unavailable
-- **NFC**: Quick pairing or authentication
-- **Audio**: Text-to-speech for accessibility
-- **Haptic**: Enhanced feedback patterns
-- **GNSS**: Location-aware commands
-- **AI IMU**: Gesture controls
-- **Scrollback**: Use encoder rotation for scrollback buffer
+* **LoRa Mesh**: Use LoRa for terminal relay when WiFi unavailable
+* **NFC**: Quick pairing or authentication
+* **Audio**: Text-to-speech for accessibility
+* **Haptic**: Enhanced feedback patterns
+* **GNSS**: Location-aware commands
+* **AI IMU**: Gesture controls
+* **Scrollback**: Use encoder rotation for scrollback buffer
 
 ## Resources
 
-- [T-LoRa Pager Product Page](https://lilygo.cc/products/t-lora-pager)
-- [LilyGoLib Documentation](https://github.com/Xinyuan-LilyGO/LilyGoLib)
-- [LILYGO Wiki](https://wiki.lilygo.cc/get_started/en/LoRa_GPS/T-LoraPager/T-LoraPager.html)
-- [Meshtastic Support](https://meshtastic.org/docs/hardware/devices/lilygo/tpager/)
+* [T-LoRa Pager Product Page](https://lilygo.cc/products/t-lora-pager)
+* [LilyGoLib Documentation](https://github.com/Xinyuan-LilyGO/LilyGoLib)
+* [LILYGO Wiki](https://wiki.lilygo.cc/get_started/en/LoRa_GPS/T-LoraPager/T-LoraPager.html)
+* [Meshtastic Support](https://meshtastic.org/docs/hardware/devices/lilygo/tpager/)
 
 ## Sources
 
-- Configuration derived from [k257-sat-tracker](https://github.com/Averroeskw/k257-sat-tracker) project
-- [CNX Software - T-LoRa Pager Overview](https://www.cnx-software.com/2025/08/12/lilygo-t-lora-pager-is-an-esp32-s3-handheld-with-support-for-text-messaging-ai-motion-detection-and-nfc/)
-- [Liliputing - T-LoRa Pager](https://liliputing.com/lilygo-t-lora-pager-is-an-esp32-powered-communications-device-with-lora-nfc-and-gps/)
+* Configuration derived from [k257-sat-tracker](https://github.com/Averroeskw/k257-sat-tracker) project
+* [CNX Software - T-LoRa Pager Overview](https://www.cnx-software.com/2025/08/12/lilygo-t-lora-pager-is-an-esp32-s3-handheld-with-support-for-text-messaging-ai-motion-detection-and-nfc/)
+* [Liliputing - T-LoRa Pager](https://liliputing.com/lilygo-t-lora-pager-is-an-esp32-powered-communications-device-with-lora-nfc-and-gps/)
